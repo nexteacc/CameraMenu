@@ -1,292 +1,345 @@
-'use client'
+'use client';
 
-import { useState, useCallback } from "react";
-import { CameraButton } from "../components/CameraButton";
-import { AuroraBackground } from "../components/AuroraBackground";
-import { CameraView } from "../components/CameraView";
-import ResultsView from "../components/ResultsView";
-import { LanguageSelector } from "../components/LanguageSelector";
-import { SignIn, SignedIn, SignedOut, useClerk } from "@clerk/clerk-react";
+import { useState, useRef } from 'react';
+import { useAuth } from '@clerk/nextjs';
+import CameraView from '../components/CameraView';
+import ResultsView from '../components/ResultsView';
+import LanguageSelector from '../components/LanguageSelector';
 
-interface Idea {
-  source: string;
-  strategy: string;
-  marketing: string;
-  market_potential: string;
-  target_audience: string;
-}
-
-// 新增翻译任务接口
 interface TranslationTask {
   taskId: string;
-  status: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
   progress: number;
-  translatedImageUrl?: string;
 }
 
 export default function Home() {
-  const { signOut, user } = useClerk();
-  const [cameraState, setCameraState] = useState<"idle" | "active" | "results">("idle");
-
-  const [ideas, setIdeas] = useState<Idea[]>([]);
-  
-  // 新增语言选择状态
-  const [selectedLanguage, setSelectedLanguage] = useState<string>("zh");
-  // 新增翻译任务状态
+  // 状态管理
+  const [cameraState, setCameraState] = useState<'idle' | 'active' | 'processing' | 'results'>('idle');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
   const [translationTask, setTranslationTask] = useState<TranslationTask | null>(null);
-
-  const [errorMessage, setErrorMessage] = useState("");
-  const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [lastImageUrl, setLastImageUrl] = useState<string | null>(null);
-
-  const handleExit = useCallback(() => {
-    setCameraState("idle");
-    if (mediaStream) {
-      mediaStream.getTracks().forEach((track) => track.stop());
-      setMediaStream(null);
+  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
+  const [translatedImageUrl, setTranslatedImageUrl] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [lastCapturedImage, setLastCapturedImage] = useState<Blob | null>(null);
+  
+  // Auth
+  const { getToken } = useAuth();
+  
+  // 轮询计时器引用
+  const pollingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // 处理退出相机
+  const handleExit = () => {
+    setCameraState('idle');
+    setErrorMessage('');
+    
+    // 清除轮询计时器
+    if (pollingTimerRef.current) {
+      clearInterval(pollingTimerRef.current);
+      pollingTimerRef.current = null;
     }
-  }, [mediaStream]);
-
-  const handleCapture = useCallback(
-    async (image: string) => {
-      try {
-        setIsLoading(true);
-        setErrorMessage("");
-        
-        if (mediaStream) {
-          mediaStream.getTracks().forEach((track) => track.stop());
-          setMediaStream(null);
-        }
-        
-        if (!image || image.length < 100) {
-          throw new Error("Invalid image data");
-        }
-
-        if (!user?.id) {
-          throw new Error("User ID is missing");
-        }
-
-        const base64Data = image.split(",")[1];
-        if (!base64Data) {
-          throw new Error("Invalid Base64 image data");
-        }
-
-        // 直接将图片上传到后端
-        const formData = new FormData();
-        formData.append('image', image);
-        formData.append('userId', user.id);
-        formData.append('targetLang', selectedLanguage);
-
-        // 调用后端上传接口
-        const uploadResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/upload`, {
-          method: 'POST',
-          body: formData
-        });
-
-        if (!uploadResponse.ok) {
-          const errorData = await uploadResponse.json();
-          throw new Error(errorData.message || "Image upload failed");
-        }
-
-        const taskData = await uploadResponse.json();
-        setTranslationTask(taskData);
-        
-        // 如果是同步处理（fastCreation=false），直接显示结果
-        if (taskData.status === "Completed" && taskData.translatedImageUrl) {
-          setLastImageUrl(taskData.translatedImageUrl);
-          setCameraState("results");
-        } else {
-          // 如果是异步处理，开始轮询结果
-          pollTranslationResult(taskData.taskId);
-        }
-
-      } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : "Unknown error");
-        setCameraState("results");
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [user, mediaStream, selectedLanguage] 
-  );
-
-  // 轮询翻译结果
-  const pollTranslationResult = useCallback(async (taskId: string) => {
+  };
+  
+  // 处理拍照
+  const handleCapture = async (imageBlob: Blob) => {
     try {
-      const checkInterval = setInterval(async () => {
-        const resultResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/task/${taskId}`, {
-          method: 'GET',
+      // 保存拍摄的图片以便重试
+      setLastCapturedImage(imageBlob);
+      
+      // 设置状态为处理中
+      setCameraState('processing');
+      setErrorMessage('');
+      
+      // 获取用户Token
+      const token = await getToken();
+      
+      // 创建FormData
+      const formData = new FormData();
+      formData.append('image', imageBlob);
+      formData.append('targetLang', selectedLanguage);
+      formData.append('userId', 'user123'); // 临时用户ID
+      
+      // 调用上传API
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '上传失败');
+      }
+      
+      const resultData = await response.json();
+      
+      // 更新任务状态
+      setTranslationTask({
+        taskId: resultData.taskId,
+        status: resultData.status,
+        progress: resultData.progress || 0
+      });
+      
+      setCurrentTaskId(resultData.taskId);
+      
+      // 如果任务已完成，直接显示结果
+      if (resultData.status === 'completed') {
+        setTranslatedImageUrl(resultData.translatedImageUrl);
+        setCameraState('results');
+      } else {
+        // 否则开始轮询任务状态
+        pollTranslationResult(resultData.taskId);
+      }
+      
+    } catch (error) {
+      console.error('拍照处理错误:', error);
+      setErrorMessage((error as Error).message || '处理图片时出错');
+      setCameraState('results');
+    }
+  };
+  
+  // 轮询翻译结果
+  const pollTranslationResult = async (taskId: string) => {
+    // 清除之前的计时器
+    if (pollingTimerRef.current) {
+      clearInterval(pollingTimerRef.current);
+    }
+    
+    // 设置轮询间隔
+    const pollInterval = 2000; // 2秒
+    let pollCount = 0;
+    const maxPolls = 30; // 最多轮询30次（约1分钟）
+    
+    pollingTimerRef.current = setInterval(async () => {
+      try {
+        pollCount++;
+        
+        // 获取用户Token
+        const token = await getToken();
+        
+        // 调用任务状态API
+        const response = await fetch(`/api/task/${taskId}`, {
           headers: {
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${token}`
           }
         });
-
-        if (!resultResponse.ok) {
-          clearInterval(checkInterval);
-          throw new Error("Failed to get translation result");
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || '获取任务状态失败');
         }
-
-        const resultData = await resultResponse.json();
-        setTranslationTask(resultData);
-
-        // 翻译完成
-        if (resultData.status === "Completed" && resultData.translatedImageUrl) {
-          clearInterval(checkInterval);
-          setLastImageUrl(resultData.translatedImageUrl);
-          setCameraState("results");
-        } 
-        // 翻译失败
-        else if (resultData.status === "Failed") {
-          clearInterval(checkInterval);
-          setErrorMessage("Translation failed: " + (resultData.message || "Unknown error"));
-          setCameraState("results");
-        }
-      }, 2000); // 每2秒检查一次
-
-      // 60秒后如果还没有结果，停止轮询
-      setTimeout(() => {
-        clearInterval(checkInterval);
-        if (cameraState !== "results") {
-          setErrorMessage("Translation timeout. Please try again.");
-          setCameraState("results");
-        }
-      }, 60000);
-
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unknown error");
-      setCameraState("results");
-    }
-  }, [cameraState]);
-
-  const handleRetry = useCallback(async () => {
-    if (lastImageUrl) {
-      setIsLoading(true);
-      setErrorMessage("");
-      try {
-        // 重新分析上一张图片
-        const ideasResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/analyze-image`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            userId: user?.id || "defaultUserId", 
-            image_url: lastImageUrl
-          })
+        
+        const resultData = await response.json();
+        
+        // 更新任务状态
+        setTranslationTask({
+          taskId: resultData.taskId,
+          status: resultData.status,
+          progress: resultData.progress || 0
         });
-
-        if (ideasResponse.status === 200) {
-          const data = await ideasResponse.json();
-          setIdeas(
-            data.ideas.map((idea: Idea) => ({
-              source: idea.source.trim(),
-              strategy: idea.strategy.trim(),
-              marketing: idea.marketing.trim(),
-              market_potential: idea.market_potential.trim(),
-              target_audience: idea.target_audience.trim()
-            }))
-          );
-          setErrorMessage("");
-        } else {
-          setErrorMessage('Analysis failed');
+        
+        // 如果任务完成或失败
+        if (resultData.status === 'completed' || resultData.status === 'failed') {
+          // 清除轮询计时器
+          if (pollingTimerRef.current) {
+            clearInterval(pollingTimerRef.current);
+            pollingTimerRef.current = null;
+          }
+          
+          if (resultData.status === 'completed') {
+            // 设置翻译后的图片URL
+            setTranslatedImageUrl(resultData.translatedFileUrl);
+          } else {
+            // 设置错误信息
+            setErrorMessage(resultData.error || '翻译失败');
+          }
+          
+          // 切换到结果视图
+          setCameraState('results');
         }
+        
+        // 如果达到最大轮询次数
+        if (pollCount >= maxPolls) {
+          if (pollingTimerRef.current) {
+            clearInterval(pollingTimerRef.current);
+            pollingTimerRef.current = null;
+          }
+          setErrorMessage('翻译超时，请稍后重试');
+          setCameraState('results');
+        }
+        
       } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : "Unknown error");
-      } finally {
-        setIsLoading(false);
+        console.error('轮询错误:', error);
+        
+        // 清除轮询计时器
+        if (pollingTimerRef.current) {
+          clearInterval(pollingTimerRef.current);
+          pollingTimerRef.current = null;
+        }
+        
+        setErrorMessage((error as Error).message || '获取翻译结果时出错');
+        setCameraState('results');
       }
+    }, pollInterval);
+  };
+  
+  // 处理重试
+  const handleRetry = async () => {
+    try {
+      // 检查是否有上一次拍摄的图片
+      if (!lastCapturedImage) {
+        throw new Error('没有可重试的图片');
+      }
+      
+      // 设置状态为处理中
+      setCameraState('processing');
+      setErrorMessage('');
+      
+      // 获取用户Token
+      const token = await getToken();
+      
+      // 创建FormData
+      const formData = new FormData();
+      formData.append('image', lastCapturedImage);
+      formData.append('targetLang', selectedLanguage);
+      formData.append('userId', 'user123'); // 临时用户ID
+      
+      // 调用上传API
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '重试上传失败');
+      }
+      
+      const resultData = await response.json();
+      
+      // 更新任务状态
+      setTranslationTask({
+        taskId: resultData.taskId,
+        status: resultData.status,
+        progress: resultData.progress || 0
+      });
+      
+      setCurrentTaskId(resultData.taskId);
+      
+      // 如果任务已完成，直接显示结果
+      if (resultData.status === 'completed') {
+        setTranslatedImageUrl(resultData.translatedImageUrl);
+        setCameraState('results');
+      } else {
+        // 否则开始轮询任务状态
+        pollTranslationResult(resultData.taskId);
+      }
+      
+    } catch (error) {
+      console.error('重试错误:', error);
+      setErrorMessage((error as Error).message || '重试时出错');
+      setCameraState('results');
     }
-  }, [lastImageUrl, user]);
-
-  const handleCameraStart = useCallback((stream: MediaStream) => {
-    setMediaStream(stream);
-    setCameraState("active");
-  }, []);
-
+  };
+  
+  // 处理语言变更
+  const handleLanguageChange = (language: string) => {
+    setSelectedLanguage(language);
+    
+    // 如果在结果页面更改语言，自动重试翻译
+    if (cameraState === 'results' && lastCapturedImage) {
+      handleRetry();
+    }
+  };
+  
+  // 处理开始相机
+  const handleCameraStart = () => {
+    setCameraState('active');
+    setErrorMessage('');
+  };
+  
   return (
-    <>
-      <SignedIn>
-        {cameraState === "idle" && (
-          <AuroraBackground>
-            <div className="flex flex-col items-center justify-center space-y-8 p-4">
-              <h1 className="text-4xl font-bold text-center text-gray-800 dark:text-white">
-                菜单翻译
-              </h1>
-              <p className="text-center text-gray-600 dark:text-gray-300 max-w-md">
-                拍摄菜单照片，获取翻译结果
-              </p>
-              
-              {/* 添加语言选择器 */}
-              <LanguageSelector 
-                selectedLanguage={selectedLanguage}
-                onLanguageChange={setSelectedLanguage}
-              />
-              
-              <CameraButton
-                onCameraStart={handleCameraStart}
-                onError={setErrorMessage}
-              />
-              
-              {errorMessage && (
-                <div className="p-4 bg-red-100 text-red-700 rounded-lg max-w-md">
-                  {errorMessage}
-                </div>
-              )}
-              
-              <button
-                onClick={() => signOut()}
-                className="mt-8 px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white transition-colors"
-              >
-                退出登录
-              </button>
-            </div>
-          </AuroraBackground>
-        )}
-
-        {cameraState === "active" && (
-          <CameraView
-            onExit={handleExit}
-            onCapture={handleCapture}
-            isLoading={isLoading}
-          />
-        )}
-
-        {cameraState === "results" && (
-          <ResultsView
-            ideas={ideas}
-            onRetake={() => {
-              setErrorMessage("");
-              setCameraState("idle");
-            }}
-            onBack={() => {
-              setErrorMessage("");
-              setCameraState("idle");
-            }}
-            onRetry={handleRetry}
-            errorMessage={errorMessage}
-            translatedImageUrl={translationTask?.translatedImageUrl}
-            selectedLanguage={selectedLanguage}
-            onLanguageChange={(language) => {
-              setSelectedLanguage(language);
-              // 如果有上一张图片，可以重新翻译
-              if (lastImageUrl) {
-                handleCapture(lastImageUrl);
-              }
-            }}
-          />
-        )}
-      </SignedIn>
-
-      <SignedOut>
-        <AuroraBackground>
-          <div className="flex flex-col items-center justify-center min-h-screen p-4">
-            <div className="w-full max-w-md">
-              <SignIn />
-            </div>
+    <main className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
+      {cameraState === 'idle' && (
+        <div className="flex flex-col items-center justify-center min-h-screen p-6 text-center">
+          <h1 className="text-4xl font-bold mb-6">菜单翻译</h1>
+          <p className="text-xl mb-8 max-w-md">
+            拍摄菜单照片，获取即时翻译。支持多种语言，让您在国外用餐无障碍。
+          </p>
+          
+          <div className="mb-8">
+            <p className="mb-2">选择目标语言:</p>
+            <LanguageSelector 
+              selectedLanguage={selectedLanguage} 
+              onLanguageChange={handleLanguageChange} 
+            />
           </div>
-        </AuroraBackground>
-      </SignedOut>
-    </>
+          
+          <button
+            onClick={handleCameraStart}
+            className="px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-xl font-semibold transition-colors flex items-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            开始拍照
+          </button>
+        </div>
+      )}
+      
+      {cameraState === 'active' && (
+        <CameraView 
+          onCapture={handleCapture} 
+          onExit={handleExit} 
+          selectedLanguage={selectedLanguage}
+        />
+      )}
+      
+      {cameraState === 'processing' && (
+        <div className="flex flex-col items-center justify-center min-h-screen p-6">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+            <h2 className="text-2xl font-semibold mb-2">正在处理...</h2>
+            <p className="text-gray-400">
+              {translationTask ? `进度: ${Math.round(translationTask.progress * 100)}%` : '准备中...'}
+            </p>
+          </div>
+        </div>
+      )}
+      
+      {cameraState === 'results' && (
+        <ResultsView 
+          translatedImageUrl={translatedImageUrl || undefined}
+          errorMessage={errorMessage}
+          selectedLanguage={selectedLanguage}
+          onRetake={() => setCameraState('active')}
+          onBack={handleExit}
+          onRetry={handleRetry}
+          onLanguageChange={handleLanguageChange}
+        />
+      )}
+    </main>
   );
 }

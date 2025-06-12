@@ -1,16 +1,6 @@
-import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-
-interface Idea {
-  source: string;
-  strategy: string;
-  marketing: string;
-  market_potential: string;
-  target_audience: string;
-}
+import { useState } from "react";
 
 interface ResultsViewProps {
-  ideas: Idea[];
   onRetake: () => void;
   onBack: () => void;
   onRetry: () => void;
@@ -21,7 +11,6 @@ interface ResultsViewProps {
 }
 
 const ResultsView = ({
-  ideas,
   onRetake,
   onBack,
   onRetry,
@@ -30,20 +19,6 @@ const ResultsView = ({
   selectedLanguage,
   onLanguageChange
 }: ResultsViewProps) => {
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
-  const [cardHeight, setCardHeight] = useState<number>(0);
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (cardRef.current) {
-      setCardHeight(cardRef.current.offsetHeight);
-    }
-  }, []);
-
-  const handleCardClick = (index: number) => {
-    setExpandedIndex(expandedIndex === index ? null : index);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-6">
       <div className="max-w-4xl mx-auto">
@@ -127,63 +102,6 @@ const ResultsView = ({
                 <option value="zh">中文</option>
               </select>
             </div>
-          </div>
-        )}
-
-        {ideas.length > 0 && (
-          <div className="space-y-4">
-            {ideas.map((idea, index) => {
-              const isExpanded = expandedIndex === index;
-              const zIndex = ideas.length - index;
-              const yOffset = isExpanded ? 0 : index * 20;
-
-              return (
-                <motion.div
-                  key={index}
-                  ref={index === 0 ? cardRef : null}
-                  className={`relative bg-gray-800 rounded-lg p-6 shadow-lg cursor-pointer overflow-hidden`}
-                  style={{ zIndex, marginTop: index === 0 ? 0 : -20 }}
-                  initial={false}
-                  animate={{
-                    y: yOffset,
-                    height: isExpanded ? "auto" : cardHeight,
-                    transition: { duration: 0.3 },
-                  }}
-                  onClick={() => handleCardClick(index)}
-                >
-                  <h3 className="text-xl font-semibold mb-2">{idea.source}</h3>
-                  <AnimatePresence>
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <div className="mt-4 space-y-4">
-                          <div>
-                            <h4 className="text-lg font-medium text-blue-400">Strategy</h4>
-                            <p className="mt-1 text-gray-300">{idea.strategy}</p>
-                          </div>
-                          <div>
-                            <h4 className="text-lg font-medium text-green-400">Marketing</h4>
-                            <p className="mt-1 text-gray-300">{idea.marketing}</p>
-                          </div>
-                          <div>
-                            <h4 className="text-lg font-medium text-yellow-400">Market Potential</h4>
-                            <p className="mt-1 text-gray-300">{idea.market_potential}</p>
-                          </div>
-                          <div>
-                            <h4 className="text-lg font-medium text-purple-400">Target Audience</h4>
-                            <p className="mt-1 text-gray-300">{idea.target_audience}</p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              );
-            })}
           </div>
         )}
 

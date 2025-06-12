@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 interface CameraViewProps {
   onExit: () => void;
-  onCapture: (image: string) => Promise<void>;
+  onCapture: (image: Blob) => Promise<void>;
   isLoading?: boolean; 
 }
 
@@ -52,9 +52,16 @@ export const CameraView = ({ onExit, onCapture, isLoading }: CameraViewProps) =>
       if (context) {
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
  
+        // 保存预览图像的base64字符串
         const imageSrc = canvas.toDataURL("image/jpeg", 0.9);
         setPreviewImage(imageSrc);
-        onCapture?.(imageSrc);
+        
+        // 将Canvas转换为Blob对象并传递给onCapture回调
+        canvas.toBlob((blob) => {
+          if (blob) {
+            onCapture?.(blob);
+          }
+        }, "image/jpeg", 0.9);
       }
     }
   };
