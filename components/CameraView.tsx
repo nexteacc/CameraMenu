@@ -3,10 +3,11 @@ import { useEffect, useRef, useState } from "react";
 interface CameraViewProps {
   onExit: () => void;
   onCapture: (image: Blob) => Promise<void>;
-  isLoading?: boolean; 
+  isLoading?: boolean;
+  selectedLanguage?: string; // 添加selectedLanguage属性
 }
 
-export const CameraView = ({ onExit, onCapture, isLoading }: CameraViewProps) => {
+export const CameraView = ({ onExit, onCapture, isLoading, selectedLanguage }: CameraViewProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -147,3 +148,5 @@ export const CameraView = ({ onExit, onCapture, isLoading }: CameraViewProps) =>
     </div>
   );
 };
+
+export default CameraView;

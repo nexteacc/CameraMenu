@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest, { params }: { params: { taskId: string } }) {
+export async function GET(request: NextRequest) {
   try {
-    // 获取任务ID
-    const taskId = params.taskId;
+    // 从URL中获取任务ID
+    const taskId = request.nextUrl.pathname.split('/').pop();
     
     if (!taskId) {
       return NextResponse.json({ error: '缺少任务ID' }, { status: 400 });

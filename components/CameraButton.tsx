@@ -66,3 +66,5 @@ export const CameraButton = ({ onCameraStart, onError }: CameraButtonProps) => {
     </button>
   );
 };
+
+export default CameraButton;

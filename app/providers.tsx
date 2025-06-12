@@ -3,7 +3,7 @@
 import { ClerkProvider } from "@clerk/clerk-react";
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const clerkPubKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  const clerkPubKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
 
   return (
     <ClerkProvider
