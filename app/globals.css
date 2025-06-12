@@ -1,0 +1,264 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.logout-button {
+  font-family: inherit;
+  font-size: 16px;
+  background: royalblue;
+  color: white;
+  padding: 0.7em 1em;
+  padding-left: 0.9em;
+  display: flex;
+  align-items: center;
+  border: none;
+  border-radius: 9999px;
+  overflow: hidden;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.logout-button span {
+  display: block;
+  margin-left: 0.3em;
+  transition: all 0.3s ease-in-out;
+}
+
+.logout-button svg {
+  display: block;
+  transform-origin: center center;
+  transition: transform 0.3s ease-in-out;
+}
+
+.logout-button:hover .svg-wrapper {
+  animation: fly-1 0.6s ease-in-out infinite alternate;
+}
+
+.logout-button:hover svg {
+  transform: translateX(1.5em) scale(1.1);
+}
+
+.logout-button:hover span {
+  transform: translateX(5em);
+}
+
+.logout-button:active {
+  transform: scale(0.95);
+}
+
+@keyframes fly-1 {
+  from {
+    transform: translateY(0.1em);
+  }
+
+  to {
+    transform: translateY(-0.1em);
+  }
+}
+
+button {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  outline: none;
+  border: 0;
+  vertical-align: middle;
+  text-decoration: none;
+  background: transparent;
+  padding: 0;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+button.learn-more {
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+  min-width: unset !important;
+  min-height: unset !important;
+  padding: 0 !important;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button.learn-more .circle {
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+  min-width: unset !important;
+  min-height: unset !important;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button.learn-more .button-text {
+  display: none !important;
+}
+
+button.learn-more .circle {
+  transition: all 0.45s cubic-bezier(0.65, 0, 0.076, 1);
+  position: relative;
+  display: block;
+  margin: 0;
+  width: 3rem;
+  height: 3rem;
+  background: #282936;
+  border-radius: 1.625rem;
+}
+
+button.learn-more .circle .icon {
+  transition: all 0.45s cubic-bezier(0.65, 0, 0.076, 1);
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  background: #fff;
+}
+
+button.learn-more .circle .icon.arrow {
+  transition: all 0.45s cubic-bezier(0.65, 0, 0.076, 1);
+  left: 0.625rem;
+  width: 1.125rem;
+  height: 0.125rem;
+  background: none;
+}
+
+button.learn-more .circle .icon.arrow::before {
+  position: absolute;
+  content: "";
+  top: -0.29rem;
+  right: 0.0625rem;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-top: 0.125rem solid #fff;
+  border-right: 0.125rem solid #fff;
+  transform: rotate(45deg);
+}
+
+button.learn-more .button-text {
+  transition: all 0.45s cubic-bezier(0.65, 0, 0.076, 1);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.75rem 0;
+  margin: 0 0 0 1.85rem;
+  color: #282936;
+  font-weight: 700;
+  line-height: 1.6;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* button:hover .circle {
+  width: 100%;
+}
+
+button:hover .circle .icon.arrow {
+  background: #fff;
+  transform: translate(1rem, 0);
+}
+
+button:hover .button-text {
+  color: #fff;
+} */
+
+.idea-card {
+  transition: background 0.18s, transform 0.12s;
+  /* 保证点击区域有圆角和边框 */
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #fff;
+}
+.idea-card:active {
+  background: #e6edff;
+  transform: scale(0.97);
+}
+/* 去掉video的控制条 */
+video::-webkit-media-controls {
+  display: none !important;
+}
+
+video::-webkit-media-controls-enclosure {
+  display: none !important;
+}
+
+video::-webkit-media-controls-panel {
+  display: none !important;
+}
+
+video::-webkit-media-controls-play-button {
+  display: none !important;
+}
+
+video::-webkit-media-controls-start-playback-button {
+  display: none !important;
+}
+
+video::-webkit-media-controls-timeline {
+  display: none !important;
+}
+
+video::-webkit-media-controls-current-time-display {
+  display: none !important;
+}
+
+video::-webkit-media-controls-time-remaining-display {
+  display: none !important;
+}
+
+video::-webkit-media-controls-mute-button {
+  display: none !important;
+}
+
+video::-webkit-media-controls-volume-slider {
+  display: none !important;
+}
+
+video::-webkit-media-controls-fullscreen-button {
+  display: none !important;
+}
+
+/* For other browsers */
+video::--webkit-media-controls-panel {
+  display: none !important;
+}
+
+video::--webkit-media-controls-play-button {
+  display: none !important;
+}
+
+video::--webkit-media-controls-start-playback-button {
+  display: none !important;
+}
+
+video::--webkit-media-controls-current-time-display {
+  display: none !important;
+}
+
+video::--webkit-media-controls-time-remaining-display {
+  display: none !important;
+}
+
+video::--webkit-media-controls-mute-button {
+  display: none !important;
+}
+
+video::--webkit-media-controls-volume-slider {
+  display: none !important;
+}
+
+video::--webkit-media-controls-fullscreen-button {
+  display: none !important;
+}
+
+video::-moz-focus-inner {
+  border: 0;
+}
+
+video[controls] {
+  display: none !important;
+}
