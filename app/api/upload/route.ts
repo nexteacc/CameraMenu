@@ -8,10 +8,11 @@ export async function POST(request: NextRequest) {
     // 获取必要参数
     const imageFile = formData.get('image') as File | null;
     const targetLang = formData.get('targetLang') as string;
+    const fromLang = formData.get('fromLang') as string; // 获取 fromLang
     const userId = formData.get('userId') as string;
     
     // 验证参数
-    if (!imageFile || !targetLang || !userId) {
+    if (!imageFile || !targetLang || !fromLang || !userId) { // 增加 fromLang 验证
       return NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
     }
 
@@ -40,9 +41,8 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         file: `data:${imageFile.type};base64,${imageBase64}`,
-        fromLang: 'auto',  // 自动检测源语言
+        fromLang: fromLang,  // 使用前端传递的 fromLang
         toLang: targetLang,
-        shouldTranslateImage: true,
         fastCreation: true,  // 异步处理
         clientTaskId: `menu_${userId}_${Date.now()}`  // 自定义任务ID
       })
@@ -58,11 +58,11 @@ export async function POST(request: NextRequest) {
     const translationData = await apiResponse.json();
     
     // 返回任务信息
+    // 当 fastCreation 为 true 时，第三方API通常只返回任务ID和初始状态
+
     return NextResponse.json({
       taskId: translationData.id,
-      status: translationData.status,
-      progress: translationData.progress || 0,
-      translatedImageUrl: translationData.translatedFileUrl
+      status: translationData.status, 
     });
     
   } catch (error) {

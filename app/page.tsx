@@ -16,7 +16,8 @@ interface TranslationTask {
 export default function Home() {
   // 状态管理
   const [cameraState, setCameraState] = useState<'idle' | 'active' | 'processing' | 'results'>('idle');
-  const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
+  const [selectedTargetLanguage, setSelectedTargetLanguage] = useState<string>('English'); // Default to English name
+  const [selectedFromLanguage, setSelectedFromLanguage] = useState<string>('Simplified Chinese'); // Default to Simplified Chinese name
   const [translationTask, setTranslationTask] = useState<TranslationTask | null>(null);
   // const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
   const [translatedImageUrl, setTranslatedImageUrl] = useState<string | null>(null);
@@ -57,7 +58,8 @@ export default function Home() {
       // 创建FormData
       const formData = new FormData();
       formData.append('image', imageBlob);
-      formData.append('targetLang', selectedLanguage);
+      formData.append('fromLang', selectedFromLanguage); // Add fromLang
+      formData.append('targetLang', selectedTargetLanguage);
       formData.append('userId', 'user123'); // 临时用户ID
       
       // 调用上传API
@@ -74,24 +76,25 @@ export default function Home() {
         throw new Error(errorData.error || '上传失败');
       }
       
-      const resultData = await response.json();
+      const resultData = await response.json(); // Expect { taskId: string, status: string }
       
-      // 更新任务状态
+
       setTranslationTask({
         taskId: resultData.taskId,
-        status: resultData.status,
-        progress: resultData.progress || 0
+        status: resultData.status as 'pending' | 'processing' | 'completed' | 'failed', // Cast status to be more specific
+        progress: 0 // Initialize progress
       });
       
-      // setCurrentTaskId(resultData.taskId);
-      
-      // 如果任务已完成，直接显示结果
-      if (resultData.status === 'completed') {
-        setTranslatedImageUrl(resultData.translatedImageUrl);
-        setCameraState('results');
-      } else {
-        // 否则开始轮询任务状态
+
+      // /api/upload (fastCreation:true) 只返回taskId和初始status
+      // 总是启动轮询获取最终结果和translatedImageUrl
+      if (resultData.taskId) {
         pollTranslationResult(resultData.taskId);
+      } else {
+        // 处理未能获取taskId的错误情况
+        console.error('Failed to get task ID from /api/upload');
+        setErrorMessage('无法启动翻译任务，请重试。');
+        setCameraState('results');
       }
       
     } catch (error) {
@@ -111,7 +114,7 @@ export default function Home() {
     // 设置轮询间隔
     const pollInterval = 2000; // 2秒
     let pollCount = 0;
-    const maxPolls = 30; // 最多轮询30次（约1分钟）
+    const maxPolls = 10; // 最多轮询10次
     
     pollingTimerRef.current = setInterval(async () => {
       try {
@@ -204,7 +207,8 @@ export default function Home() {
       // 创建FormData
       const formData = new FormData();
       formData.append('image', lastCapturedImage);
-      formData.append('targetLang', selectedLanguage);
+      formData.append('fromLang', selectedFromLanguage); // Add fromLang
+      formData.append('targetLang', selectedTargetLanguage);
       formData.append('userId', 'user123'); // 临时用户ID
       
       // 调用上传API
@@ -248,9 +252,18 @@ export default function Home() {
     }
   };
   
-  // 处理语言变更
-  const handleLanguageChange = (language: string) => {
-    setSelectedLanguage(language);
+  // 处理源语言变更
+  const handleFromLanguageChange = (languageName: string) => {
+    setSelectedFromLanguage(languageName);
+    // Optionally, trigger retry if in results state and image exists
+    if (cameraState === 'results' && lastCapturedImage) {
+      handleRetry();
+    }
+  };
+
+  // 处理目标语言变更
+  const handleTargetLanguageChange = (languageName: string) => {
+    setSelectedTargetLanguage(languageName);
     
     // 如果在结果页面更改语言，自动重试翻译
     if (cameraState === 'results' && lastCapturedImage) {
@@ -272,13 +285,29 @@ export default function Home() {
           <p className="text-xl mb-8 max-w-md text-black dark:text-white">
             拍摄菜单照片，获取即时翻译。支持多种语言，让您在国外用餐无障碍。
           </p>
-          
-          <div className="mb-8">
-            <p className="mb-2 text-black dark:text-white">选择目标语言:</p>
-            <LanguageSelector 
-              selectedLanguage={selectedLanguage} 
-              onLanguageChange={handleLanguageChange} 
-            />
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8 w-full max-w-2xl">
+            <div className="flex-1 w-full sm:w-auto">
+              <p className="mb-2 text-black dark:text-white text-center sm:text-left">从 (源语言):</p>
+              <LanguageSelector 
+                selectedLanguage={selectedFromLanguage} 
+                onLanguageChange={handleFromLanguageChange} 
+                label="选择源语言"
+                className="w-full"
+              />
+            </div>
+            
+            <div className="text-2xl text-black dark:text-white mx-2 hidden sm:block">→</div>
+
+            <div className="flex-1 w-full sm:w-auto">
+              <p className="mb-2 text-black dark:text-white text-center sm:text-left">到 (目标语言):</p>
+              <LanguageSelector 
+                selectedLanguage={selectedTargetLanguage} 
+                onLanguageChange={handleTargetLanguageChange} 
+                label="选择目标语言"
+                className="w-full"
+              />
+            </div>
           </div>
           
           <button

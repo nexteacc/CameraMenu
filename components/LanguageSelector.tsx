@@ -2,28 +2,20 @@ import React from "react";
 import {Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button} from "@heroui/react";
 
 interface LanguageSelectorProps {
-  selectedLanguage: string;
-  onLanguageChange: (language: string) => void;
+  selectedLanguage: string; // This will now store the language NAME
+  onLanguageChange: (languageName: string) => void;
   disabled?: boolean;
   loading?: boolean;
   error?: string;
   className?: string;
+  label?: string; // Optional label for the selector
 }
 
-// 与 ResultsView 保持一致的语言配置
+// Updated supported languages as per user request
 const SUPPORTED_LANGUAGES = [
-  { code: 'en', name: '英语', nativeName: 'English' },
-  { code: 'ja', name: '日语', nativeName: '日本語' },
-  { code: 'ko', name: '韩语', nativeName: '한국어' },
-  { code: 'fr', name: '法语', nativeName: 'Français' },
-  { code: 'de', name: '德语', nativeName: 'Deutsch' },
-  { code: 'es', name: '西班牙语', nativeName: 'Español' },
-  { code: 'ru', name: '俄语', nativeName: 'Русский' },
-  { code: 'it', name: '意大利语', nativeName: 'Italiano' },
-  { code: 'pt', name: '葡萄牙语', nativeName: 'Português' },
-  { code: 'ar', name: '阿拉伯语', nativeName: 'العربية' },
-  { code: 'hi', name: '印地语', nativeName: 'हिन्दी' },
-  { code: 'zh', name: '中文', nativeName: '中文' }
+  { code: 'en', name: 'English', nativeName: 'English' },
+  { code: 'vi', name: 'Vietnamese', nativeName: 'Vietnamese' },
+  { code: 'zh', name: 'Simplified Chinese', nativeName: 'Simplified Chinese' }
 ];
 
 const LanguageSelector: React.FC<LanguageSelectorProps> = ({
@@ -34,24 +26,32 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   error,
   className
 }) => {
-  const [selectedKeys, setSelectedKeys] = React.useState(new Set([selectedLanguage]));
+  // selectedLanguage prop now stores the language NAME. We use language CODE for DropdownItem keys.
+  const [selectedKeys, setSelectedKeys] = React.useState(new Set([
+    SUPPORTED_LANGUAGES.find(lang => lang.name === selectedLanguage)?.code || SUPPORTED_LANGUAGES[0].code
+  ]));
 
-  const selectedValue = React.useMemo(() => {
-    const selectedLang = SUPPORTED_LANGUAGES.find(lang => lang.code === selectedLanguage);
-    return selectedLang ? `${selectedLang.name} (${selectedLang.nativeName})` : '选择语言';
-  }, [selectedLanguage]);
+  const selectedValueDisplay = React.useMemo(() => {
+    const selectedLangObject = SUPPORTED_LANGUAGES.find(lang => lang.name === selectedLanguage);
+    // Display the name directly as it's now the primary identifier from the parent
+    return selectedLangObject ? selectedLangObject.name : (label || '选择语言');
+  }, [selectedLanguage, label]);
 
   const handleSelectionChange = (keys: any) => {
-    const selectedKey = Array.from(keys)[0] as string;
-    if (selectedKey && selectedKey !== selectedLanguage) {
-      setSelectedKeys(new Set([selectedKey]));
-      onLanguageChange(selectedKey);
+    const selectedLangCode = Array.from(keys)[0] as string;
+    const selectedLangObject = SUPPORTED_LANGUAGES.find(lang => lang.code === selectedLangCode);
+    if (selectedLangObject && selectedLangObject.name !== selectedLanguage) {
+      setSelectedKeys(new Set([selectedLangCode]));
+      onLanguageChange(selectedLangObject.name); // Pass the language NAME to the callback
     }
   };
 
-  // 当selectedLanguage prop变化时，同步更新selectedKeys
+  // When selectedLanguage (name) prop changes, update selectedKeys (code)
   React.useEffect(() => {
-    setSelectedKeys(new Set([selectedLanguage]));
+    const currentLangCode = SUPPORTED_LANGUAGES.find(lang => lang.name === selectedLanguage)?.code;
+    if (currentLangCode) {
+      setSelectedKeys(new Set([currentLangCode]));
+    }
   }, [selectedLanguage]);
 
   return (
@@ -72,28 +72,28 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                 加载中...
               </span>
             ) : (
-              selectedValue
+              selectedValueDisplay
             )}
           </Button>
         </DropdownTrigger>
         <DropdownMenu
           disallowEmptySelection
-          aria-label="语言选择"
-          selectedKeys={selectedKeys}
+          aria-label={label || "语言选择"}
+          selectedKeys={selectedKeys} // This should be the language CODE
           selectionMode="single"
           variant="solid" // 改为 solid 以确保背景不透明
           onSelectionChange={handleSelectionChange}
-          className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md shadow-lg" // 添加背景、边框和阴影
+          className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md shadow-lg min-w-[200px]" // 添加背景、边框和阴影
           itemClasses={{
             base: "text-center text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700", // 确保文本颜色对比度，并设置hover效果
           }}
         >
           {SUPPORTED_LANGUAGES.map((language) => (
             <DropdownItem 
-              key={language.code} 
+              key={language.code} // Key should be unique, code is good here
               className="text-center text-zinc-900 dark:text-zinc-100 data-[hover=true]:bg-zinc-100 data-[hover=true]:dark:bg-zinc-700 data-[selectable=true]:focus:bg-zinc-200 data-[selectable=true]:dark:focus:bg-zinc-600"
             > 
-              {language.name} ({language.nativeName})
+              {language.name} {/* Display only the name as requested */}
             </DropdownItem>
           ))}
         </DropdownMenu>

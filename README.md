@@ -1,85 +1,109 @@
 # CameraMenu - 菜单翻译应用
 
-这是一个基于 Next.js 15.2.0 开发的现代化 Web 应用，主要功能是拍摄菜单照片并将其翻译成不同语言。项目采用了 React 19.0.0 和 TypeScript，并使用了 Tailwind CSS 进行样式设计。
+这是一个基于 Next.js (App Router) 开发的现代化 Web 应用，主要功能是拍摄菜单照片并将其翻译成不同语言。项目采用了 React 和 TypeScript，并使用了 Tailwind CSS 进行样式设计。用户认证通过 Clerk 实现。
 
 ## 项目架构
 
 项目采用了 Next.js 的 App Router 架构，主要文件和目录结构如下：
 
-- `/app` - 包含应用的主要页面和布局
-- `/components` - 包含可复用的 UI 组件
-- `/lib` - 包含工具函数
-- `/public` - 包含静态资源
+-   `/app` - 包含应用的主要页面、API路由和布局。
+    -   `/app/api` - 后端 API 接口，包括图片上传 (`/upload`) 和任务状态查询 (`/task/[taskId]`)。
+    -   `/app/page.tsx` - 应用主页面，处理相机交互、状态管理和API调用。
+    -   `/app/layout.tsx` - 应用的根布局。
+-   `/components` - 包含可复用的 UI 组件。
+    -   `CameraView.tsx` - 相机预览和拍照组件。
+    -   `ResultsView.tsx` - 展示翻译结果（PDF格式）的组件，支持手势缩放。
+    -   `LanguageSelector.tsx` - 语言选择组件。
+    -   `CameraButton.tsx` - 启动相机的按钮。
+    -   `AuroraBackground.tsx` - 美观的背景组件。
+-   `/lib` - 包含工具函数 (例如 `utils.ts`)。
+-   `/public` - 包含静态资源 (例如 `pdf.worker.min.js` 如果本地托管)。
 
 ## 核心功能
 
-1. **用户认证**：使用 Clerk 进行用户认证，包括登录和登出功能。
-
-2. **相机拍照**：通过浏览器的 MediaDevices API 访问设备相机，拍摄菜单照片。
-
-3. **图片翻译**：将拍摄的菜单照片上传到后端服务，进行 OCR 识别和翻译处理。
-
-4. **多语言支持**：支持将菜单翻译成多种语言，包括中文、英文、日文、韩文、法文、德文、西班牙文和俄文。
-
-5. **异步任务处理**：支持异步翻译任务，通过轮询机制获取翻译结果。
-
-## 主要组件
-
-1. **CameraButton**：启动相机的按钮组件，处理相机权限请求和错误处理。
-
-2. **CameraView**：相机视图组件，负责显示相机预览、拍照和处理图像数据。
-
-3. **ResultsView**：结果显示组件，展示翻译后的图片和可能的错误信息。
-
-4. **LanguageSelector**：语言选择器组件，允许用户选择目标翻译语言。
-
-5. **AuroraBackground**：提供美观的渐变背景效果的组件，增强用户体验。
+1.  **用户认证**：使用 Clerk 进行用户认证，保护API接口。
+2.  **相机拍照**：通过浏览器的 MediaDevices API 访问设备相机，拍摄菜单照片。
+3.  **图片上传与翻译任务创建**：将拍摄的菜单照片和目标语言上传到后端 `/api/upload` 接口，后端调用第三方服务进行OCR和翻译，并返回任务ID。
+4.  **异步任务轮询与结果获取**：前端通过轮询 `/api/task/[taskId]` 接口获取翻译任务的状态和最终的翻译结果URL（PDF格式）。
+5.  **PDF结果展示与交互**：在 `ResultsView.tsx` 组件中使用 `react-pdf` 展示翻译后的PDF文件，支持在移动设备上通过双指手势进行缩放，在桌面设备上通过鼠标滚轮缩放。
+6.  **多语言支持**：用户可以选择目标翻译语言。
 
 ## 工作流程
 
-1. 用户登录应用
-2. 选择目标翻译语言
-3. 点击相机按钮启动相机
-4. 拍摄菜单照片
-5. 应用将照片上传到后端服务
-6. 后端服务进行 OCR 识别和翻译处理
-7. 应用显示翻译结果或错误信息
-8. 用户可以重新拍摄或返回主页
+1.  用户通过 Clerk 登录应用。
+2.  在主页面 (`page.tsx`)，用户选择目标翻译语言。
+3.  用户点击拍照按钮，激活 `CameraView.tsx`。
+4.  用户拍摄菜单照片并确认。
+5.  `page.tsx` 中的 `handleCapture` 函数将图片数据 (Blob) 和选择的语言通过 FormData 上传到 `/api/upload`。
+6.  `/api/upload` (在 `app/api/upload/route.ts`) 接收请求，进行Token验证，然后调用第三方翻译服务创建翻译任务，并返回 `taskId` 和`status`。
+7.  `page.tsx` 接收到 `taskId` 后，启动 `pollTranslationResult` 函数，该函数定期调用 `/api/task/[taskId]`。
+8.  `/api/task/[taskId]` (在 `app/api/task/[taskId]/route.ts`) 查询第三方服务的任务状态和结果。
+9.  轮询直到任务完成（`status === 'Completed'`）并且获取到 `translatedFileUrl` (PDF链接)，或者任务失败。
+10. `page.tsx` 更新状态，并将 `translatedFileUrl` 和其他相关信息传递给 `ResultsView.tsx`。
+11. `ResultsView.tsx` 使用 `react-pdf` 加载并显示PDF，用户可以通过手势或滚轮进行缩放。
+12. 用户可以进行重拍、返回或重试操作。
 
+## 数据流转与状态管理
 
-## 数据流转流程
-1. 初始状态 → 用户选择语言 → 点击开始拍照
-2. 相机激活 → 用户拍摄照片 → 预览确认
-3. 图片上传 → 调用 /api/upload → 获取任务ID
-4. 状态轮询 → 定期调用 /api/task/[taskId] → 更新进度
-5. 结果展示 → 显示翻译后图片或错误信息
-6. 交互操作 → 重试、重拍、返回等
-
-
+-   **主要状态管理**：在 `app/page.tsx` 中使用 `useState` 管理应用的核心状态，包括相机激活状态、拍摄的图片、目标语言、任务ID、任务状态、翻译进度、翻译结果URL和错误信息。
+-   **Token 获取**：通过 `useAuth` (Clerk) 获取用户会话Token，用于API请求认证。
+-   **API 通信**：
+    *   图片上传：`POST /api/upload` (FormData)
+    *   结果轮询：`GET /api/task/[taskId]`
+-   **Props 传递**：状态和回调函数通过 props 从 `page.tsx` 传递到子组件如 `CameraView.tsx` 和 `ResultsView.tsx`。
 
 ## 移动端适配
 
-项目在设计时充分考虑了移动端适配，通过 Tailwind CSS 的响应式类和合理的布局设计，可以在不同尺寸的设备上提供良好的用户体验。特别是相机功能和结果显示部分，都针对移动设备做了特定优化：
+项目在设计时充分考虑了移动端适配：
 
-- 使用了响应式布局类如 `min-h-screen`、`w-full`、`max-w-2xl` 等
-- 相机视图使用了 `aspect-[3/4]` 保持固定比例
-- 视频和图片元素使用 `object-cover` 确保内容在不同尺寸的容器中正确显示
-- 视频元素使用了 `playsInline` 和 `webkit-playsinline="true"` 属性，针对 iOS 设备优化
-- 相机请求使用了 `facingMode: "environment"` 配置，优先使用后置相机
+-   使用 Tailwind CSS 的响应式类进行布局。
+-   相机视图 (`CameraView.tsx`) 和结果视图 (`ResultsView.tsx`) 均针对移动设备优化。
+-   `ResultsView.tsx` 中的 PDF 展示支持触摸手势缩放 (`touchAction: 'pan-y pinch-zoom'`)。
+-   相机API优先使用后置摄像头 (`facingMode: "environment"`)。
 
-## API 集成
+## API 接口说明
 
-应用通过 RESTful API 与后端服务通信，主要包括：
+### 1. `/api/upload`
 
-1. 图片上传 API：`/api/upload`
-2. 翻译任务状态查询 API：`/api/task/{taskId}`
+-   **方法**: `POST`
+-   **Content-Type**: `multipart/form-data`
+-   **认证**: 需要 Clerk Session Token (Bearer Token in Authorization header)
+-   **请求体参数**:
+    -   `image`: (File) 拍摄的图片文件。
+    -   `targetLang`: (String) 目标翻译语言代码。
+    -   `fromLang` (可选): (String) 源语言代码 (当前后端固定为 `auto`)。
+    -   `shouldTranslateImage` (可选): (Boolean) 是否翻译图片 (当前后端固定为 `true`)。
+-   **成功响应 (200 OK)**:
+    ```json
+    {
+      "taskId": "some-task-id",
+      "status": "Pending" // 或其他初始状态
+    }
+    ```
+-   **错误响应**: 标准 HTTP 错误码 (如 400, 401, 500) 及错误信息。
 
-后端 API 基于文档中描述的翻译 API 实现，支持文档翻译和图片翻译功能。
+### 2. `/api/task/[taskId]`
+
+-   **方法**: `GET`
+-   **认证**: 需要 Clerk Session Token (Bearer Token in Authorization header)
+-   **路径参数**:
+    -   `taskId`: (String) 由 `/api/upload` 返回的任务ID。
+-   **成功响应 (200 OK)**:
+    ```json
+    {
+      "taskId": "some-task-id",
+      "status": "Completed", // "Processing", "Failed", etc.
+      "progress": 100,
+      "translatedFileUrl": "url-to-translated-pdf.pdf", // 状态为 Completed 时出现
+      "error": null // 或错误信息字符串
+    }
+    ```
+-   **错误响应**: 标准 HTTP 错误码 (如 401, 404, 500) 及错误信息。
 
 ## 开发与运行
 
 ```bash
-# 安装依赖
+# 安装依赖 (项目使用 pnpm)
 pnpm install
 
 # 开发模式运行
@@ -94,270 +118,14 @@ pnpm start
 
 ## 环境变量
 
-项目需要以下环境变量：
+项目需要以下环境变量 (通常在 `.env.local` 文件中配置):
 
-- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` - Clerk 认证服务的公钥
-- `NEXT_PUBLIC_API_BASE_URL` - 后端 API 的基础 URL
+-   `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`: Clerk 的可发布密钥。
+-   `CLERK_SECRET_KEY`: Clerk 的秘密密钥 (用于后端验证)。
+-   `SIMPLIFY_API_KEY`: 第三方翻译服务 (如 simplifyai.cn) 的 API 密钥。
 
+## 注意事项
 
-
-# 菜单翻译改造方案
-
-## 后端
-- 前端拍照后，将图片直接上传到自家后端。
-- 后端收到图片后，携带密钥向 simplifyai.cn 发起请求，获取翻译结果。
-- 后端将翻译结果返回给前端。
-
----
-
-### 前端开发任务拆解
-1. 图片上传流程重构：将原有直接上传到 Cloudinary 的逻辑，改为上传到后端，由后端统一处理图片存储和分析。
-2. 目标语言选择交互：增加目标语言选择的 UI 组件（如下拉框、按钮组等），支持用户选择如“中文”、“英文”等目标语言，并将选择结果作为 `targetLang` 字段传递给后端。
-3. 移动端适配与交互优化：确保拍照、预览、结果展示等流程在主流手机浏览器下流畅、易用。
-4. 结果页结构调整：结果页面（ResultsView）将优化为仅展示翻译后图片，操作区包含重拍、切换语言、下载图片等按钮，支持移动端适配。
-5. 与后端接口契约定义：明确图片上传、分析、结果获取等接口的参数、返回值、鉴权方式。
-6. 用户体验与异常处理完善：包括加载态、错误提示、重试机制等。
-
----
-
-## 后端接口设计要点
-
-1. 图片上传与分析接口：
-   - 参数：图片数据（base64 或文件）、userId、targetLang
-   - 返回：分析结果、错误信息等
-   - 鉴权：校验前端传递的用户 token，解析 userId
-2. 结果获取接口（如有异步分析需求）：
-   - 参数：任务ID、userId
-   - 返回：分析结果、进度、错误信息等
-3. 安全与防滥用：
-   - 限制单用户并发请求数、图片大小和类型
-   - 日志记录与异常告警
-   - 其他防止接口被滥用的措施
-
----
-
-### 图片上传与分析接口与结果获取接口字段与数据流设计（参考文档翻译API）
-
-#### 1. 图片上传与分析接口
-- 接口路径：`/api/upload`
-- 请求方式：POST
-- 请求头：
-  - Authorization: Bearer <token>（强制，安全认证）
-  - Content-Type: multipart/form-data
-- 请求参数：
-  - image（必填）：图片文件，multipart/form-data
-  - userId（必填）：用户ID，字符串
-  - targetLang（必填）：目标语言，字符串（如 "zh", "en"）
-  - clientTaskId（可选）：客户端自定义任务ID，便于幂等和异常恢复
-  - fastCreation（可选）：布尔值，true 时立即返回任务ID并异步处理，false 时同步处理
-  - webhookUrl（可选）：任务完成后回调通知地址
-  - 其他可选参数可参考文档翻译API，如模型选择、OCR 强制、图片翻译开关等
-- 返回值：
-  - taskId：任务ID，字符串
-  - status：任务状态（如 Analyzing、Processing、Completed、Failed）
-  - result（可选）：同步处理时直接返回分析和翻译结果（如菜单结构、翻译文本等 JSON）
-  - progress（可选）：任务进度，0~100
-  - error（可选）：错误信息
-- 异常返回：
-  - 401：未授权或 token 无效
-  - 400：参数不全或格式错误
-  - 429：请求过于频繁
-  - 500：服务器内部错误
-
-#### 2. 结果获取接口
-- 接口路径：`/api/task/{taskId}/result` 或 `/api/task/{taskId}`
-- 请求方式：GET
-- 请求头：Authorization: Bearer <token>
-- 请求参数：
-  - taskId（必填）：任务ID，路径参数
-  - withTexts（可选）：是否返回详细文本结构
-  - textsInArray（可选）：返回格式为数组
-- 返回值：
-  - taskId：任务ID
-  - status：任务状态（如 Processing、Completed、Failed）
-  - progress：进度，0~100
-  - originalFileUrl：原图片URL
-  - translatedFileUrl：翻译后图片或文档URL（如有）
-  - result：分析和翻译结果（如菜单结构、文本对、翻译内容等 JSON）
-  - error：错误信息
-- 异常返回：
-  - 401：未授权
-  - 404：任务不存在或无权限
-  - 500：服务器错误
-
-
-
-#### 3. 认证流程设计
-- **前端认证**：
-  - 使用Clerk进行用户认证，每个用户拥有独特的Session Token
-  - 前端在调用后端API时，在请求头中携带用户的Session Token
-  - 使用FormData格式上传图片文件和其他参数
-
-- **后端认证**：
-  - 后端接收请求后，使用Clerk SDK验证前端提供的用户Token
-  - 验证通过后，后端使用安全存储的开发者API Token调用第三方翻译API
-  - 后端作为中转站，保护第三方API Token不被前端暴露
-
-- **认证流程示例**：
-  1. 用户通过Clerk登录应用，获取Session Token
-  2. 用户拍摄图片并选择目标语言
-  3. 前端将图片、目标语言和用户Session Token发送到后端
-  4. 后端验证用户Token有效性
-  5. 后端使用开发者API Token调用第三方翻译API
-  6. 后端将翻译结果返回给前端
-  7. 前端展示翻译结果
-
-- **安全性考虑**：
-  - 开发者API Token仅存储在后端，不暴露给前端
-  - 用户Session Token用于验证用户身份，确保请求来自合法用户
-  - 后端实施请求频率限制，防止API滥用
-
-
-# 开发任务优先级
-
-
-
-## 第一阶段（核心功能）
-1. 修改handleCapture函数 ：改为直接上传到后端
-   - 使用FormData格式上传图片文件
-   - 在请求头中添加用户认证Token
-   - 添加必要参数（targetLang, userId等）
-2. 添加语言选择组件 ：简单的下拉框或按钮组
-3. 调整ResultsView组件 ：展示翻译后的图片
-4. 更新接口调用逻辑 ：适配新的后端接口
-   - 实现轮询机制获取翻译结果
-   - 处理各种状态和错误情况
-
-
-## 第二阶段（体验优化）
-1. 移动端交互优化 ：确保语言选择和结果展示在手机上友好
-2. 添加下载功能 ：支持下载翻译后的图片
-3. 完善错误处理 ：针对翻译API的特定错误
-4. 加载状态优化 ：显示翻译进度
-
-
-
-# UI界面设计
-### 1. 主页/登录页面
-- 未登录状态 ：显示Clerk提供的登录界面
-- 已登录状态 ：
-  - 顶部显示"菜单翻译"标题和简短描述
-  - 中间是语言选择器下拉框，支持多种语言（中文、英文、日文、韩文、法文、德文、西班牙文、俄文等）
-  - 下方是一个蓝色的"START"相机按钮
-  - 底部有退出登录按钮
-  - 整个界面使用AuroraBackground组件提供渐变背景效果
-
-
-  ### 2. 相机视图界面
-- 占据大部分屏幕的相机预览窗口，比例为3:4
-- 底部有两个按钮：
-  - 返回按钮（左侧）
-  - 拍照按钮（右侧）
-- 拍照后会显示加载动画
-
-
-### 3. 结果展示界面
-- 顶部有返回按钮和"翻译结果"标题
-- 中间显示翻译后的图片
-- 图片下方显示当前翻译语言和语言选择下拉框
-- 如有错误，会显示错误信息和重试按钮
-- 底部有"重新拍照"按钮
-
-
-### 开发日志
-
-### 2024-12-19 LanguageSelector.tsx 组件优化
-
-**修复的高优先级问题：**
-
-1. **语言配置不一致问题**
-   - **问题**：与 ResultsView 组件的语言列表不一致，缺少部分语言选项
-   - **解决方案**：统一使用 `SUPPORTED_LANGUAGES` 配置，包含完整的 12 种语言
-   - **改进**：确保整个应用的语言选项保持一致，避免用户困惑
-
-2. **导出方式冲突**
-   - **问题**：同时存在命名导出和默认导出，可能导致导入混乱
-   - **解决方案**：移除命名导出，只保留默认导出
-   - **改进**：统一导出方式，符合项目规范
-
-3. **无障碍性支持缺失**
-   - **问题**：缺少 ARIA 标签和语义化标记
-   - **解决方案**：添加完整的无障碍属性和错误状态管理
-   - **改进**：支持屏幕阅读器，符合 WCAG 标准
-
-4. **缺少状态管理**
-   - **问题**：没有加载状态和错误处理机制
-   - **解决方案**：添加 `loading` 和 `error` props 及相应的 UI 状态
-   - **改进**：提供更好的用户反馈和错误提示
-
-5. **样式硬编码问题**
-   - **问题**：CSS 类名硬编码，难以维护和定制
-   - **解决方案**：提取 `DEFAULT_STYLES` 配置对象和动态样式计算
-   - **改进**：提升代码可维护性和样式灵活性
-
-**新增功能：**
-- 双语言显示：同时显示中文名称和原生语言名称
-- 加载状态指示器：显示旋转动画表示正在处理
-- 错误状态处理：显示错误信息和视觉反馈
-- 选择提示信息：显示当前选择的语言信息
-- 智能样式计算：根据状态动态调整样式
-- 增强的工具提示：显示详细的语言信息
-
-**接口扩展：**
-- 新增 `loading?: boolean` - 加载状态控制
-- 新增 `error?: string` - 错误信息显示
-- 新增 `className?: string` - 自定义样式支持
-
-**技术改进总结：**
-- **一致性**：与其他组件保持语言配置一致
-- **可维护性**：配置化管理，易于扩展和修改
-- **用户体验**：完善的状态反馈和错误处理
-- **无障碍性**：全面的 ARIA 支持和语义化标记
-- **代码质量**：清晰的结构和类型安全
-
-## 2024年12月 - CameraView组件优化
-
-### 修改内容
-对 `components/CameraView.tsx` 组件进行了全面的稳定性和用户体验优化：
-
-#### 1. 解决useEffect无限循环问题
-- **问题**：原来的 `useEffect` 依赖数组包含 `stream`，导致每次stream更新都会重新启动相机
-- **解决方案**：移除了 `stream` 依赖，改为空依赖数组 `[]`，确保相机只在组件挂载时启动一次
-- **影响**：避免了性能问题和不必要的相机重启
-
-#### 2. 加强资源清理机制
-- **问题**：原来的清理逻辑不够完整，可能导致内存泄漏和相机资源占用
-- **解决方案**：
-  - 添加了 `streamRef` 来持久化引用媒体流
-  - 在清理函数中同时停止所有媒体轨道并清空引用
-  - 添加了额外的 useEffect 确保组件卸载时的完整清理
-  - 清理时同时设置 `videoRef.current.srcObject = null`
-- **影响**：确保媒体流资源得到正确释放，避免内存泄漏
-
-#### 3. 完善错误处理和用户体验
-- **问题**：原来只有简单的 console.error，用户无法知道具体问题
-- **解决方案**：
-  - 添加了 `cameraError` 状态来跟踪错误信息
-  - 针对不同类型的相机错误提供具体的中文提示：
-    - `NotAllowedError`: "相机权限被拒绝，请在浏览器设置中允许相机访问"
-    - `NotFoundError`: "未找到相机设备"
-    - `NotSupportedError`: "浏览器不支持相机功能"
-    - 其他错误: "相机启动失败，请刷新页面重试"
-  - 添加了错误提示UI和重试按钮
-- **影响**：用户可以清楚了解问题原因并采取相应行动
-
-#### 4. 提升类型安全性和健壮性
-- **问题**：原来的 capture 函数缺少边界检查
-- **解决方案**：
-  - 添加了完整的空值检查和错误处理
-  - 检查视频是否准备就绪（videoWidth 和 videoHeight 不为 0）
-  - 添加了 canvas context 获取失败的处理
-  - 改进了 blob 创建失败的错误处理
-  - 使用 `error: any` 类型注解以便访问 error.name 属性
-- **影响**：提高了代码的稳定性和可维护性
-
-#### 5. 新增功能
-- **错误提示界面**：当相机启动失败时，显示红色错误提示框，包含具体错误信息和重试按钮
-- **改进的相机启动逻辑**：将 `startCamera` 函数提取为独立函数，便于重用和错误恢复
-
+-   **PDF.js Worker**: `react-pdf` 需要一个 PDF.js worker。当前代码中 `ResultsView.tsx` 使用 CDN (`//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`)。如果需要本地托管，应将 `pdf.worker.min.js` 从 `node_modules/pdfjs-dist/build/` 复制到 `/public` 目录，并更新 `pdfjs.GlobalWorkerOptions.workerSrc` 指向本地路径 (例如 `'/pdf.worker.min.js'`)。
+-   **Clerk Token 验证**: 后端 API (`/api/upload/route.ts` 和 `/api/task/[taskId]/route.ts`) 中实际的 Clerk Token 验证逻辑（使用 `auth()` 或 `getAuth()`) 可能需要根据具体部署和Clerk版本进行检查和调整，确保其按预期工作。
 
