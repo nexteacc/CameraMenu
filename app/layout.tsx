@@ -7,8 +7,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="zh" className="dark">
-      <body className="dark">
+    <html lang="zh">
+      <body>
         <Providers>
           {children}
         </Providers>
