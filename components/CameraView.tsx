@@ -144,7 +144,7 @@ const CameraView = ({ onExit, onCapture, isLoading }: CameraViewProps) => {
         <div className="absolute bottom-8 left-0 right-0 flex justify-center space-x-6">
           <button
             onClick={onExit}
-            className="rounded-lg bg-black/60 hover:bg-black/80 p-3 backdrop-blur-sm border border-white/20 transition-all duration-200 shadow-lg"
+            className="rounded-full bg-black/50 hover:bg-black/70 w-12 h-12 flex items-center justify-center backdrop-blur-md border border-white/30 transition-all duration-200 shadow-xl focus:outline-none focus:ring-2 focus:ring-white/50"
             disabled={isLoading}
           >
             <svg

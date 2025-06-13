@@ -83,12 +83,16 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
           selectionMode="single"
           variant="solid" // 改为 solid 以确保背景不透明
           onSelectionChange={handleSelectionChange}
-          itemClasses={{ // 为 DropdownItem 添加样式类
-            base: "text-center",
+          className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md shadow-lg" // 添加背景、边框和阴影
+          itemClasses={{
+            base: "text-center text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700", // 确保文本颜色对比度，并设置hover效果
           }}
         >
           {SUPPORTED_LANGUAGES.map((language) => (
-            <DropdownItem key={language.code} className="text-center"> {/* 确保文字居中 */}
+            <DropdownItem 
+              key={language.code} 
+              className="text-center text-zinc-900 dark:text-zinc-100 data-[hover=true]:bg-zinc-100 data-[hover=true]:dark:bg-zinc-700 data-[selectable=true]:focus:bg-zinc-200 data-[selectable=true]:dark:focus:bg-zinc-600"
+            > 
               {language.name} ({language.nativeName})
             </DropdownItem>
           ))}
