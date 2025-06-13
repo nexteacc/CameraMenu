@@ -15,9 +15,11 @@ const CameraView = ({ onExit, onCapture, isLoading }: CameraViewProps) => {
   // 移除未使用的stream状态变量
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [cameraError, setCameraError] = useState<string>('');
+  const [videoLoaded, setVideoLoaded] = useState<boolean>(false);
 
   const startCamera = async () => {
     try {
+      setVideoLoaded(false); // 重置视频加载状态
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: "environment",
@@ -112,25 +114,47 @@ const CameraView = ({ onExit, onCapture, isLoading }: CameraViewProps) => {
             unoptimized
           />
         ) : (
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            controls={false}
-            webkit-playsinline="true"
-            onLoadedMetadata={() => {
-              if (videoRef.current) videoRef.current.play();
-            }}
-            className="w-full h-full object-cover"
-          />
+          <>
+            {!videoLoaded && (
+              <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                <div className="text-white text-center">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white mb-2"></div>
+                  <p>启动相机中...</p>
+                </div>
+              </div>
+            )}
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              controls={false}
+              webkit-playsinline="true"
+              onLoadedMetadata={() => {
+                if (videoRef.current) {
+                  videoRef.current.play();
+                  setVideoLoaded(true);
+                }
+              }}
+              onCanPlay={() => {
+                setVideoLoaded(true);
+              }}
+              className={`w-full h-full object-cover transition-opacity duration-500 ${
+                videoLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
+              style={{
+                minWidth: '100%',
+                minHeight: '100%'
+              }}
+            />
+          </>
         )}
         <canvas ref={canvasRef} className="hidden" width={1920} height={1080} />
 
         <div className="absolute bottom-8 left-0 right-0 flex justify-center space-x-6">
           <button
             onClick={onExit}
-            className="rounded-full bg-white/30 p-4 backdrop-blur-sm"
+            className="rounded-lg bg-black/60 hover:bg-black/80 p-3 backdrop-blur-sm border border-white/20 transition-all duration-200 shadow-lg"
             disabled={isLoading}
           >
             <svg
