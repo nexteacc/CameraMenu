@@ -268,13 +268,13 @@ export default function Home() {
     <AuroraBackground className="text-white">
       {cameraState === 'idle' && (
         <div className="flex flex-col items-center justify-center min-h-screen p-6 text-center">
-          <h1 className="text-4xl font-bold mb-6">菜单翻译</h1>
-          <p className="text-xl mb-8 max-w-md">
+          <h1 className="text-4xl font-bold mb-6 text-black dark:text-white">菜单翻译</h1>
+          <p className="text-xl mb-8 max-w-md text-black dark:text-white">
             拍摄菜单照片，获取即时翻译。支持多种语言，让您在国外用餐无障碍。
           </p>
           
           <div className="mb-8">
-            <p className="mb-2">选择目标语言:</p>
+            <p className="mb-2 text-black dark:text-white">选择目标语言:</p>
             <LanguageSelector 
               selectedLanguage={selectedLanguage} 
               onLanguageChange={handleLanguageChange} 
