@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button} from "@heroui/react";
 
 interface LanguageSelectorProps {
@@ -49,12 +49,17 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
     }
   };
 
+  // 当selectedLanguage prop变化时，同步更新selectedKeys
+  React.useEffect(() => {
+    setSelectedKeys(new Set([selectedLanguage]));
+  }, [selectedLanguage]);
+
   return (
     <div className={className}>
       <Dropdown>
         <DropdownTrigger>
           <Button 
-            className="capitalize min-w-[200px] text-black dark:text-white bg-white dark:bg-zinc-800 border border-gray-300 dark:border-gray-600" 
+            className="capitalize min-w-[200px]" 
             variant="bordered"
             disabled={disabled || loading}
           >
@@ -78,13 +83,9 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
           selectionMode="single"
           variant="flat"
           onSelectionChange={handleSelectionChange}
-          className="bg-white dark:bg-zinc-800 text-black dark:text-white"
         >
           {SUPPORTED_LANGUAGES.map((language) => (
-            <DropdownItem 
-              key={language.code} 
-              className="text-black dark:text-white hover:bg-gray-100 dark:hover:bg-zinc-700"
-            >
+            <DropdownItem key={language.code}>
               {language.name} ({language.nativeName})
             </DropdownItem>
           ))}
