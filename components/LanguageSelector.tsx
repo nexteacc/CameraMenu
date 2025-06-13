@@ -118,11 +118,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         </div>
       )}
       
-      {selectedLanguageInfo && !error && (
-        <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-          将翻译为 {selectedLanguageInfo.nativeName}
-        </div>
-      )}
+
     </div>
   );
 };

@@ -5,6 +5,7 @@ import { useAuth } from '@clerk/nextjs';
 import CameraView from '../components/CameraView';
 import ResultsView from '../components/ResultsView';
 import LanguageSelector from '../components/LanguageSelector';
+import AuroraBackground from '../components/AuroraBackground';
 
 interface TranslationTask {
   taskId: string;
@@ -264,7 +265,7 @@ export default function Home() {
   };
   
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
+    <AuroraBackground className="text-white">
       {cameraState === 'idle' && (
         <div className="flex flex-col items-center justify-center min-h-screen p-6 text-center">
           <h1 className="text-4xl font-bold mb-6">菜单翻译</h1>
@@ -339,6 +340,6 @@ export default function Home() {
           onLanguageChange={handleLanguageChange}
         />
       )}
-    </main>
+    </AuroraBackground>
   );
 }

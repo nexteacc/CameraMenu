@@ -159,7 +159,7 @@ const ResultsView = ({
                 value={selectedLanguage}
                 onChange={(e) => onLanguageChange(e.target.value)}
                 className="bg-gray-700 text-white border border-gray-600 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                aria-label="选择目标语言"
+                aria-label="目标语言"
               >
                 {LANGUAGE_OPTIONS.map(option => (
                   <option key={option.value} value={option.value}>
