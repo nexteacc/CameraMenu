@@ -362,11 +362,11 @@ export default function Home() {
         <ResultsView 
           translatedImageUrl={translatedImageUrl || undefined}
           errorMessage={errorMessage}
-          selectedLanguage={selectedLanguage}
+          selectedLanguage={selectedTargetLanguage} // 使用已定义的目标语言状态
           onRetake={() => setCameraState('active')}
           onBack={handleExit}
           onRetry={handleRetry}
-          onLanguageChange={handleLanguageChange}
+          onLanguageChange={handleTargetLanguageChange} // 使用已定义的目标语言处理函数
         />
       )}
     </AuroraBackground>
