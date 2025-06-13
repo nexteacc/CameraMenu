@@ -1,13 +1,13 @@
 'use client';
 
 import { ClerkProvider } from "@clerk/clerk-react";
-import { HeroUIProvider } from "@heroui/react";
+
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const clerkPubKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
 
   return (
-    <HeroUIProvider>
+        {/* ClerkProvider with NextUIProvider */
       <ClerkProvider
         publishableKey={clerkPubKey}
         appearance={{
@@ -22,6 +22,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
       >
         {children}
       </ClerkProvider>
-    </HeroUIProvider>
+    // </NextThemesProvider>
   );
 }

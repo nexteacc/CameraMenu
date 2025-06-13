@@ -306,29 +306,26 @@ export default function Home() {
             拍摄菜单照片，获取即时翻译。支持多种语言，让您在国外用餐无障碍。
           </p>
 
-          <div className="flex flex-col md:flex-row items-stretch justify-center gap-4 mb-8 w-full max-w-3xl">
-            <div className="flex-1 flex flex-col items-center md:items-start w-full">
-              <p className="mb-2 text-black dark:text-white">从 (源语言):</p>
+          <div className="flex flex-row items-stretch justify-center gap-2 sm:gap-4 mb-8 w-full max-w-3xl px-2">
+            <div className="flex-1 flex flex-col items-center w-full">
+              <p className="mb-1 sm:mb-2 text-sm sm:text-base text-black dark:text-white">从:</p>
               <LanguageSelector 
                 selectedLanguage={selectedFromLanguage} 
                 onLanguageChange={handleFromLanguageChange} 
                 label="选择源语言"
-                className="w-full max-w-xs md:max-w-none"
+                className="w-full text-base md:text-lg" // Increased text size
               />
             </div>
             
-            <div className="text-2xl text-black dark:text-white mx-2 hidden md:flex items-center self-center">→</div>
-            {/* Show arrow on medium screens and up, centered */}
-            <div className="block md:hidden text-2xl text-black dark:text-white my-2 self-center">↓</div> 
-            {/* Show down arrow on small screens, centered */}
+            <div className="text-xl sm:text-2xl text-black dark:text-white mx-1 sm:mx-2 flex items-center self-center pt-5 sm:pt-6">→</div>
 
-            <div className="flex-1 flex flex-col items-center md:items-start w-full">
-              <p className="mb-2 text-black dark:text-white">到 (目标语言):</p>
+            <div className="flex-1 flex flex-col items-center w-full">
+              <p className="mb-1 sm:mb-2 text-sm sm:text-base text-black dark:text-white">到:</p>
               <LanguageSelector 
                 selectedLanguage={selectedTargetLanguage} 
                 onLanguageChange={handleTargetLanguageChange} 
                 label="选择目标语言"
-                className="w-full max-w-xs md:max-w-none"
+                className="w-full text-base md:text-lg" // Increased text size
               />
             </div>
           </div>
