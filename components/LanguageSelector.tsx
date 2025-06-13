@@ -81,11 +81,14 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
           aria-label="语言选择"
           selectedKeys={selectedKeys}
           selectionMode="single"
-          variant="flat"
+          variant="solid" // 改为 solid 以确保背景不透明
           onSelectionChange={handleSelectionChange}
+          itemClasses={{ // 为 DropdownItem 添加样式类
+            base: "text-center",
+          }}
         >
           {SUPPORTED_LANGUAGES.map((language) => (
-            <DropdownItem key={language.code}>
+            <DropdownItem key={language.code} className="text-center"> {/* 确保文字居中 */}
               {language.name} ({language.nativeName})
             </DropdownItem>
           ))}

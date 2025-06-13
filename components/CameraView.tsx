@@ -15,15 +15,15 @@ const CameraView = ({ onExit, onCapture, isLoading }: CameraViewProps) => {
   // 移除未使用的stream状态变量
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [cameraError, setCameraError] = useState<string>('');
-  const [videoLoaded, setVideoLoaded] = useState<boolean>(false);
+  // const [isCameraStarting, setIsCameraStarting] = useState<boolean>(true); // Removed for direct preview
 
   const startCamera = async () => {
+    // setIsCameraStarting(true); // Removed
     try {
-      setVideoLoaded(false); // 重置视频加载状态
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: "environment",
-          width: { ideal: 1920 },
+          width: { ideal: 1920 }, // 请求理想分辨率
           height: { ideal: 1080 },
         },
       });
@@ -31,6 +31,10 @@ const CameraView = ({ onExit, onCapture, isLoading }: CameraViewProps) => {
       setCameraError(''); // 清除之前的错误
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        videoRef.current.play().catch(playError => {
+            console.error('Error attempting to play video:', playError);
+            setCameraError('Could not play video stream.');
+        });
       }
     } catch (error: unknown) {
       console.error("Error accessing camera:", error);
@@ -43,6 +47,7 @@ const CameraView = ({ onExit, onCapture, isLoading }: CameraViewProps) => {
       } else {
         setCameraError('相机启动失败，请刷新页面重试');
       }
+      // setIsCameraStarting(false); // Removed
     }
   };
 
@@ -104,7 +109,9 @@ const CameraView = ({ onExit, onCapture, isLoading }: CameraViewProps) => {
 
   return (
     <div className="flex flex-col items-center justify-start min-h-screen pt-12 pb-8 bg-zinc-50 dark:bg-zinc-900">
-      <div className="relative w-full max-w-2xl aspect-[3/4] bg-black rounded-2xl overflow-hidden">
+      {/* Ensure the parent container maintains aspect ratio for the video to fill correctly */}
+      <div className="relative w-full max-w-2xl aspect-[3/4] bg-black rounded-2xl overflow-hidden flex items-center justify-center">
+        {/* Removed isCameraStarting loader */}
         {previewImage ? (
           <Image
             src={previewImage}
@@ -114,40 +121,23 @@ const CameraView = ({ onExit, onCapture, isLoading }: CameraViewProps) => {
             unoptimized
           />
         ) : (
-          <>
-            {!videoLoaded && (
-              <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                <div className="text-white text-center">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white mb-2"></div>
-                  <p>启动相机中...</p>
-                </div>
-              </div>
-            )}
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              controls={false}
-              webkit-playsinline="true"
-              onLoadedMetadata={() => {
-                if (videoRef.current) {
-                  videoRef.current.play();
-                  setVideoLoaded(true);
-                }
-              }}
-              onCanPlay={() => {
-                setVideoLoaded(true);
-              }}
-              className={`w-full h-full object-cover transition-opacity duration-500 ${
-                videoLoaded ? 'opacity-100' : 'opacity-0'
-              }`}
-              style={{
-                minWidth: '100%',
-                minHeight: '100%'
-              }}
-            />
-          </>
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            controls={false}
+            webkit-playsinline="true"
+            // onLoadedMetadata is still useful for knowing when the video dimensions are available,
+            // but setIsCameraStarting is removed.
+            onLoadedMetadata={() => {
+              if (videoRef.current) {
+                // Optional: log dimensions or perform other actions once metadata is loaded
+                console.log('Video metadata loaded:', videoRef.current.videoWidth, videoRef.current.videoHeight);
+              }
+            }}
+            className="w-full h-full object-cover"
+          />
         )}
         <canvas ref={canvasRef} className="hidden" width={1920} height={1080} />
 
