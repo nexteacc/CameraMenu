@@ -44,7 +44,6 @@ export async function POST(request: NextRequest) {
         fromLang: fromLang,  // 使用前端传递的 fromLang
         toLang: targetLang,
         fastCreation: true,  // 异步处理
-        clientTaskId: `menu_${userId}_${Date.now()}`  // 自定义任务ID
       })
     });
     
