@@ -95,12 +95,22 @@ export default function Home() {
         console.error('Failed to get task ID from /api/upload');
         setErrorMessage('无法启动翻译任务，请重试。');
         setCameraState('results');
+        // 清除可能存在的轮询计时器，以防万一
+        if (pollingTimerRef.current) {
+          clearInterval(pollingTimerRef.current);
+          pollingTimerRef.current = null;
+        }
       }
       
     } catch (error) {
       console.error('拍照处理错误:', error);
       setErrorMessage((error as Error).message || '处理图片时出错');
       setCameraState('results');
+      // 清除可能存在的轮询计时器
+      if (pollingTimerRef.current) {
+        clearInterval(pollingTimerRef.current);
+        pollingTimerRef.current = null;
+      }
     }
   };
   
@@ -109,12 +119,13 @@ export default function Home() {
     // 清除之前的计时器
     if (pollingTimerRef.current) {
       clearInterval(pollingTimerRef.current);
+      pollingTimerRef.current = null; // 确保引用也被清除
     }
     
     // 设置轮询间隔
     const pollInterval = 2000; // 2秒
     let pollCount = 0;
-    const maxPolls = 10; // 最多轮询10次
+    const maxPolls = 30; // 增加最大轮询次数以适应更长的翻译时间
     
     pollingTimerRef.current = setInterval(async () => {
       try {
@@ -130,9 +141,17 @@ export default function Home() {
           }
         });
         
+        // 如果响应不成功，也视为轮询失败
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || '获取任务状态失败');
+          const errorData = await response.json().catch(() => ({ error: '获取任务状态失败，且无法解析错误响应' }));
+          // 清除轮询计时器
+          if (pollingTimerRef.current) {
+            clearInterval(pollingTimerRef.current);
+            pollingTimerRef.current = null;
+          }
+          setErrorMessage(errorData.error || '获取任务状态失败');
+          setCameraState('results');
+          return; // 提前退出，不再继续
         }
         
         const resultData = await response.json();
@@ -155,6 +174,7 @@ export default function Home() {
           if (resultData.status === 'completed') {
             // 设置翻译后的图片URL
             setTranslatedImageUrl(resultData.translatedFileUrl);
+            setErrorMessage(''); // 清除之前的错误信息（如果有）
           } else {
             // 设置错误信息
             setErrorMessage(resultData.error || '翻译失败');
@@ -164,8 +184,8 @@ export default function Home() {
           setCameraState('results');
         }
         
-        // 如果达到最大轮询次数
-        if (pollCount >= maxPolls) {
+        // 如果达到最大轮询次数且任务仍未完成/失败
+        if (pollCount >= maxPolls && (resultData.status !== 'completed' && resultData.status !== 'failed')) {
           if (pollingTimerRef.current) {
             clearInterval(pollingTimerRef.current);
             pollingTimerRef.current = null;
