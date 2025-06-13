@@ -7,7 +7,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const clerkPubKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
 
   return (
-        {/* ClerkProvider with NextUIProvider */
       <ClerkProvider
         publishableKey={clerkPubKey}
         appearance={{
