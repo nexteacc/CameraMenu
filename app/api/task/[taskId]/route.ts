@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     }
     
     // 提取token
-    const token = authHeader.split(' ')[1];
+    // const token = authHeader.split(' ')[1];
     
     // 这里可以添加token验证逻辑
     // 注意：实际生产环境中应该验证token的有效性

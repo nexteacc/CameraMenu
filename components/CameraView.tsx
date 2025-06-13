@@ -1,80 +1,115 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState, useEffect } from 'react';
+import Image from "next/image";
 
 interface CameraViewProps {
   onExit: () => void;
   onCapture: (image: Blob) => Promise<void>;
   isLoading?: boolean;
-  selectedLanguage?: string; // 添加selectedLanguage属性
+  // selectedLanguage?: string; // 移除未使用的属性
 }
 
-export const CameraView = ({ onExit, onCapture, isLoading, selectedLanguage }: CameraViewProps) => {
+const CameraView = ({ onExit, onCapture, isLoading }: CameraViewProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  // 移除未使用的stream状态变量
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [cameraError, setCameraError] = useState<string>('');
+
+  const startCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "environment",
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+        },
+      });
+      streamRef.current = mediaStream;
+      setCameraError(''); // 清除之前的错误
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+    } catch (error: unknown) {
+      console.error("Error accessing camera:", error);
+      if (error instanceof Error && error.name === 'NotAllowedError') {
+        setCameraError('相机权限被拒绝，请在浏览器设置中允许相机访问');
+      } else if (error instanceof Error && error.name === 'NotFoundError') {
+        setCameraError('未找到相机设备');
+      } else if (error instanceof Error && error.name === 'NotSupportedError') {
+        setCameraError('浏览器不支持相机功能');
+      } else {
+        setCameraError('相机启动失败，请刷新页面重试');
+      }
+    }
+  };
 
   useEffect(() => {
-    const startCamera = async () => {
-      try {
-        const mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: "environment",
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
-          },
-        });
-        setStream(mediaStream);
-        if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
-        }
-      } catch (error) {
-        console.error("Error accessing camera:", error);
-      }
-    };
-
     startCamera();
 
     return () => {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
+      // 确保清理所有媒体轨道
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => {
+          track.stop();
+        });
+        streamRef.current = null;
+      }
+      // 保存videoRef.current到变量中避免ESLint警告
+      const videoElement = videoRef.current;
+      if (videoElement) {
+        videoElement.srcObject = null;
       }
     };
-  }, []);
+  }, []); // 空依赖数组，只在组件挂载时执行
 
   const capture = () => {
-    if (canvasRef.current && videoRef.current) {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-
-      const context = canvas.getContext("2d");
-      if (context) {
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
- 
-        // 保存预览图像的base64字符串
-        const imageSrc = canvas.toDataURL("image/jpeg", 0.9);
-        setPreviewImage(imageSrc);
-        
-        // 将Canvas转换为Blob对象并传递给onCapture回调
-        canvas.toBlob((blob) => {
-          if (blob) {
-            onCapture?.(blob);
-          }
-        }, "image/jpeg", 0.9);
-      }
+    if (!canvasRef.current || !videoRef.current) {
+      console.error('Canvas or video element not available');
+      return;
     }
+    
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      console.error('Video not ready');
+      return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const context = canvas.getContext("2d");
+    if (!context) {
+      console.error('Cannot get canvas context');
+      return;
+    }
+    
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    const imageSrc = canvas.toDataURL("image/jpeg", 0.9);
+    setPreviewImage(imageSrc);
+    
+    canvas.toBlob((blob) => {
+      if (blob) {
+        onCapture?.(blob);
+      } else {
+        console.error('Failed to create blob from canvas');
+      }
+    }, "image/jpeg", 0.9);
   };
 
   return (
     <div className="flex flex-col items-center justify-start min-h-screen pt-12 pb-8 bg-zinc-50 dark:bg-zinc-900">
       <div className="relative w-full max-w-2xl aspect-[3/4] bg-black rounded-2xl overflow-hidden">
         {previewImage ? (
-          <img
+          <Image
             src={previewImage}
             alt="Preview"
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
+            unoptimized
           />
         ) : (
           <video
@@ -100,50 +135,56 @@ export const CameraView = ({ onExit, onCapture, isLoading, selectedLanguage }: C
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 text-white"
               fill="none"
               viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="white"
-              className="w-6 h-6"
+              stroke="currentColor"
             >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
               />
             </svg>
           </button>
-
-          <button
-            onClick={capture}
-            className="rounded-full bg-white/30 p-4 backdrop-blur-sm"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="white"
-                className="w-6 h-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"
-                />
-              </svg>
-            )}
-          </button>
+          
+          {!previewImage && (
+            <button
+              onClick={capture}
+              className="rounded-full bg-white p-4 shadow-lg"
+              disabled={isLoading}
+            >
+              <div className="w-8 h-8 rounded-full bg-red-500"></div>
+            </button>
+          )}
         </div>
+        
+        {isLoading && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+            <div className="text-white text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white mb-2"></div>
+              <p>处理中...</p>
+            </div>
+          </div>
+        )}
+        
+        {cameraError && (
+          <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4">
+            <div className="bg-red-900/90 border border-red-500 rounded-lg p-6 text-center max-w-sm">
+              <p className="text-red-300 mb-4">{cameraError}</p>
+              <button
+                onClick={() => {
+                  setCameraError('');
+                  startCamera();
+                }}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+              >
+                重试
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
     
     // 提取token
-    const token = authHeader.split(' ')[1];
+    // const token = authHeader.split(' ')[1];
     
     // 这里可以添加token验证逻辑
     // ...

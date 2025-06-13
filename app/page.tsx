@@ -17,7 +17,7 @@ export default function Home() {
   const [cameraState, setCameraState] = useState<'idle' | 'active' | 'processing' | 'results'>('idle');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
   const [translationTask, setTranslationTask] = useState<TranslationTask | null>(null);
-  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
+  // const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
   const [translatedImageUrl, setTranslatedImageUrl] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [lastCapturedImage, setLastCapturedImage] = useState<Blob | null>(null);
@@ -82,7 +82,7 @@ export default function Home() {
         progress: resultData.progress || 0
       });
       
-      setCurrentTaskId(resultData.taskId);
+      // setCurrentTaskId(resultData.taskId);
       
       // 如果任务已完成，直接显示结果
       if (resultData.status === 'completed') {
@@ -229,7 +229,7 @@ export default function Home() {
         progress: resultData.progress || 0
       });
       
-      setCurrentTaskId(resultData.taskId);
+      // setCurrentTaskId(resultData.taskId);
       
       // 如果任务已完成，直接显示结果
       if (resultData.status === 'completed') {
@@ -313,7 +313,6 @@ export default function Home() {
         <CameraView 
           onCapture={handleCapture} 
           onExit={handleExit} 
-          selectedLanguage={selectedLanguage}
         />
       )}
       
