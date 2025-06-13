@@ -24,7 +24,8 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   disabled = false,
   loading = false,
   error,
-  className
+  className,
+  label // Destructure the label prop here
 }) => {
   // selectedLanguage prop now stores the language NAME. We use language CODE for DropdownItem keys.
   const [selectedKeys, setSelectedKeys] = React.useState(new Set([
