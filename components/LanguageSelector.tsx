@@ -60,7 +60,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
       <Dropdown>
         <DropdownTrigger>
           <Button 
-            className="capitalize min-w-[200px]" 
+            className="capitalize min-w-[200px] border-zinc-300 dark:border-zinc-600 hover:border-zinc-400 dark:hover:border-zinc-500" 
             variant="bordered"
             disabled={disabled || loading}
           >
@@ -84,7 +84,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
           selectionMode="single"
           variant="solid" // 改为 solid 以确保背景不透明
           onSelectionChange={handleSelectionChange}
-          className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md shadow-lg min-w-[200px]" // 添加背景、边框和阴影
+          className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-md shadow-lg min-w-[200px]" // 调整背景和边框颜色以增加对比度
           itemClasses={{
             base: "text-center text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700", // 确保文本颜色对比度，并设置hover效果
           }}
@@ -92,7 +92,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
           {SUPPORTED_LANGUAGES.map((language) => (
             <DropdownItem 
               key={language.code} // Key should be unique, code is good here
-              className="text-center text-zinc-900 dark:text-zinc-100 data-[hover=true]:bg-zinc-100 data-[hover=true]:dark:bg-zinc-700 data-[selectable=true]:focus:bg-zinc-200 data-[selectable=true]:dark:focus:bg-zinc-600"
+              className="text-center text-zinc-900 dark:text-zinc-100 data-[hover=true]:bg-zinc-100 data-[hover=true]:dark:bg-zinc-700 data-[selectable=true]:focus:bg-zinc-200 data-[selectable=true]:dark:focus:bg-zinc-600 data-[selected=true]:bg-blue-500 data-[selected=true]:text-white data-[selected=true]:dark:bg-blue-600 data-[selected=true]:dark:text-white"
             > 
               {language.name} {/* Display only the name as requested */}
             </DropdownItem>
