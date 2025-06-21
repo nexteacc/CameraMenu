@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     apiFormData.append('shouldTranslateImage', 'true'); // 启用图片OCR翻译
 
     // 调用第三方翻译 API
-    const apiResponse = await fetch('https://translate.simplifyai.cn/api/v1/translations', {
+    const apiResponse = await fetch(`${process.env.TRANSLATION_API_BASE_URL}/api/v1/translations`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.TRANSLATION_API_KEY}`

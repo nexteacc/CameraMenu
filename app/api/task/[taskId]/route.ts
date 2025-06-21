@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     // 例如：验证JWT token或调用认证服务
     
     // 调用第三方翻译API查询任务状态
-    const apiResponse = await fetch(`https://translate.simplifyai.cn/api/v1/translations/${taskId}`, {
+    const apiResponse = await fetch(`${process.env.TRANSLATION_API_BASE_URL}/api/v1/translations/${taskId}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${process.env.TRANSLATION_API_KEY}`,
