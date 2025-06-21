@@ -47,7 +47,7 @@ export default function Home() {
   const [selectedFromLanguage, setSelectedFromLanguage] = useState<string>('Simplified Chinese'); // Default to Simplified Chinese name
   const [translationTask, setTranslationTask] = useState<TranslationTask | null>(null);
   // const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
-  const [translatedImageUrl, setTranslatedImageUrl] = useState<string | null>(null);
+  const [translatedFileUrl, setTranslatedFileUrl] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [lastCapturedImage, setLastCapturedImage] = useState<Blob | null>(null);
   
@@ -86,7 +86,7 @@ export default function Home() {
       const formData = new FormData();
       formData.append('image', imageBlob);
       formData.append('fromLang', selectedFromLanguage); // Add fromLang
-      formData.append('targetLang', selectedTargetLanguage);
+      formData.append('toLang', selectedTargetLanguage); // 统一使用toLang字段
       formData.append('userId', 'user123'); // 临时用户ID
       
       // 调用上传API
@@ -114,7 +114,7 @@ export default function Home() {
       
 
       // /api/upload (fastCreation:true) 只返回taskId和初始status
-      // 总是启动轮询获取最终结果和translatedImageUrl
+      // 总是启动轮询获取最终结果和translatedFileUrl
       if (resultData.taskId) {
         pollTranslationResult(resultData.taskId);
       } else {
@@ -201,7 +201,7 @@ export default function Home() {
           
           if (currentStatus === 'Completed') {
             // 设置翻译后的图片URL
-            setTranslatedImageUrl(resultData.translatedFileUrl);
+            setTranslatedFileUrl(resultData.translatedFileUrl);
             setErrorMessage(''); // 清除之前的错误信息（如果有）
           } else {
             // 设置错误信息 - 根据状态提供更具体的错误信息
@@ -291,7 +291,7 @@ export default function Home() {
       
       // 如果任务已完成，直接显示结果
       if (retryStatus === 'Completed') {
-        setTranslatedImageUrl(resultData.translatedFileUrl);
+        setTranslatedFileUrl(resultData.translatedFileUrl);
         setCameraState('results');
       } else if (isFinalStatus(retryStatus)) {
         // 如果是其他最终状态（失败），显示错误
@@ -425,7 +425,7 @@ export default function Home() {
       
       {cameraState === 'results' && (
         <ResultsView 
-          translatedImageUrl={translatedImageUrl || undefined}
+          translatedFileUrl={translatedFileUrl || undefined}
           errorMessage={errorMessage}
           selectedLanguage={selectedTargetLanguage} // 使用已定义的目标语言状态
           onRetake={() => setCameraState('active')}

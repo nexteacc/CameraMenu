@@ -43,6 +43,43 @@
 11. `ResultsView.tsx` 使用 `react-pdf` 加载并显示PDF，用户可以通过手势或滚轮进行缩放。
 12. 用户可以进行重拍、返回或重试操作。
 
+## 数据流程详解
+
+### 📸 图片数据流转路径
+
+**优化后的数据流程（v2.0）**：
+
+1. **相机捕获阶段**：
+   - `CameraView.tsx` → Canvas绘制 → `canvas.toBlob()` → JPEG格式Blob对象
+
+2. **前端上传阶段**：
+   - `page.tsx` → 创建FormData → 添加image(Blob)、fromLang、toLang、userId → `fetch('/api/upload')`
+
+3. **后端转发阶段**（关键优化）：
+   - `route.ts` → 接收FormData → 直接创建新FormData → 添加`shouldTranslateImage: 'true'` → 转发给第三方API
+   - **格式**：`multipart/form-data`（符合API要求）
+   - **关键参数**：`shouldTranslateImage: 'true'` 启用图片OCR翻译
+
+4. **API响应阶段**：
+   - 第三方API → 返回taskId → 前端开始轮询 → 最终获得`translatedFileUrl`（PDF文档链接）
+
+5. **结果展示阶段**：
+   - `ResultsView.tsx` → 使用`react-pdf`渲染PDF → 支持缩放和交互
+
+### 🔄 性能优化对比
+
+| 版本 | 数据转换次数 | 格式 | 性能 | OCR支持 |
+|------|-------------|------|------|--------|
+| v1.0 (旧版) | 4次转换 | JSON + base64 | 低 | ❌ |
+| v2.0 (优化) | 1次转换 | multipart/form-data | 高 | ✅ |
+
+**优化收益**：
+- ✅ 减少了3次不必要的数据转换
+- ✅ 使用正确的`multipart/form-data`格式
+- ✅ 启用图片OCR翻译功能
+- ✅ 提升上传性能和成功率
+- ✅ 统一字段命名（`toLang`）
+
 ## 数据流转与状态管理
 
 -   **主要状态管理**：在 `app/page.tsx` 中使用 `useState` 管理应用的核心状态，包括相机激活状态、拍摄的图片、源语言、目标语言、任务ID、任务状态、翻译进度、翻译结果URL和错误信息。
@@ -77,9 +114,10 @@
 -   **认证**: 需要 Clerk Session Token (Bearer Token in Authorization header)
 -   **请求体参数**:
     -   `image`: (File) 拍摄的图片文件。
-    -   `targetLang`: (String) 目标翻译语言名称（如 "English", "Vietnamese", "Simplified Chinese"）。
+    -   `toLang`: (String) 目标翻译语言名称（如 "English", "Vietnamese", "Simplified Chinese"）。
     -   `fromLang`: (String) 源语言名称（必需参数）。
     -   `userId`: (String) 用户ID（必需参数）。
+-   **内部处理**: 后端直接转发FormData到第三方API，自动添加 `shouldTranslateImage: 'true'` 参数启用OCR翻译。
 -   **成功响应 (200 OK)**:
     ```json
     {

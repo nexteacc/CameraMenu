@@ -2,49 +2,43 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    // 获取表单数据
     const formData = await request.formData();
-    
-    // 获取必要参数
-    const imageFile = formData.get('image') as File | null;
-    const targetLang = formData.get('targetLang') as string;
-    const fromLang = formData.get('fromLang') as string; // 获取 fromLang
+    const image = formData.get('image') as File;
+    const toLang = formData.get('toLang') as string;
+    const fromLang = formData.get('fromLang') as string;
     const userId = formData.get('userId') as string;
-    
-    // 验证参数
-    if (!imageFile || !targetLang || !fromLang || !userId) { // 增加 fromLang 验证
-      return NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
+
+    // 验证必需的参数
+    if (!image || !toLang || !fromLang || !userId) {
+      return NextResponse.json(
+        { error: 'Missing required parameters: image, toLang, fromLang, userId' },
+        { status: 400 }
+      );
     }
 
-    // 验证用户认证（从请求头获取token）
+    // 验证 Authorization header
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Missing or invalid Authorization header' },
+        { status: 401 }
+      );
     }
-    
-    // 提取token
-    // const token = authHeader.split(' ')[1];
-    
-    // 这里可以添加token验证逻辑
-    // ...
-    
-    // 读取图片数据
-    const imageBuffer = await imageFile.arrayBuffer();
-    const imageBase64 = Buffer.from(imageBuffer).toString('base64');
-    
-    // 调用第三方翻译API
+
+    // 创建新的FormData发送给第三方API
+    const apiFormData = new FormData();
+    apiFormData.append('file', image);
+    apiFormData.append('fromLang', fromLang);
+    apiFormData.append('toLang', toLang);
+    apiFormData.append('shouldTranslateImage', 'true'); // 启用图片OCR翻译
+
+    // 调用第三方翻译 API
     const apiResponse = await fetch('https://translate.simplifyai.cn/api/v1/translations', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.TRANSLATION_API_KEY}`,
-        'Content-Type': 'application/json'
+        'Authorization': `Bearer ${process.env.TRANSLATION_API_KEY}`
       },
-      body: JSON.stringify({
-        file: `data:${imageFile.type};base64,${imageBase64}`,
-        fromLang: fromLang,  // 使用前端传递的 fromLang
-        toLang: targetLang,
-        fastCreation: true,  // 异步处理
-      })
+      body: apiFormData
     });
     
     if (!apiResponse.ok) {
