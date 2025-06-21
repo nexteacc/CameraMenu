@@ -10,12 +10,24 @@ interface LanguageSelectorProps {
   label?: string; // Optional label for the selector
 }
 
-// Updated supported languages as per user request
+// Supported languages with code and name only
 const SUPPORTED_LANGUAGES = [
-  { code: 'en', name: 'English', nativeName: 'English' },
-  { code: 'vi', name: 'Vietnamese', nativeName: 'Vietnamese' },
-  { code: 'zh', name: 'Simplified Chinese', nativeName: 'Simplified Chinese' }
+  { code: 'en', name: 'English' },
+  { code: 'vi', name: 'Vietnamese' },
+  { code: 'zh', name: 'Simplified Chinese' }
 ];
+
+// Helper function to get language code from name
+export const getLanguageCode = (name: string): string => {
+  const language = SUPPORTED_LANGUAGES.find(lang => lang.name === name);
+  return language?.code || 'en';
+};
+
+// Helper function to get language name from code
+export const getLanguageName = (code: string): string => {
+  const language = SUPPORTED_LANGUAGES.find(lang => lang.code === code);
+  return language?.name || 'English';
+};
 
 const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   selectedLanguage,

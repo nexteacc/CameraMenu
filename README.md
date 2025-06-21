@@ -26,15 +26,15 @@
 3.  **图片上传与翻译任务创建**：将拍摄的菜单照片和目标语言上传到后端 `/api/upload` 接口，后端调用第三方服务进行OCR和翻译，并返回任务ID。
 4.  **异步任务轮询与结果获取**：前端通过轮询 `/api/task/[taskId]` 接口获取翻译任务的状态和最终的翻译结果URL（PDF格式）。
 5.  **PDF结果展示与交互**：在 `ResultsView.tsx` 组件中使用 `react-pdf` 展示翻译后的PDF文件，支持在移动设备上通过双指手势进行缩放，在桌面设备上通过鼠标滚轮缩放。
-6.  **多语言支持**：用户可以选择目标翻译语言。
+6.  **双语言选择支持**：用户可以选择源语言和目标翻译语言，支持 English、Vietnamese、Simplified Chinese 三种语言。
 
 ## 工作流程
 
 1.  用户通过 Clerk 登录应用。
-2.  在主页面 (`page.tsx`)，用户选择目标翻译语言。
+2.  在主页面 (`page.tsx`)，用户选择源语言和目标翻译语言。
 3.  用户点击拍照按钮，激活 `CameraView.tsx`。
 4.  用户拍摄菜单照片并确认。
-5.  `page.tsx` 中的 `handleCapture` 函数将图片数据 (Blob) 和选择的语言通过 FormData 上传到 `/api/upload`。
+5.  `page.tsx` 中的 `handleCapture` 函数将图片数据 (Blob)、源语言和目标语言通过 FormData 上传到 `/api/upload`。
 6.  `/api/upload` (在 `app/api/upload/route.ts`) 接收请求，进行Token验证，然后调用第三方翻译服务创建翻译任务，并返回 `taskId` 和`status`。
 7.  `page.tsx` 接收到 `taskId` 后，启动 `pollTranslationResult` 函数，该函数定期调用 `/api/task/[taskId]`。
 8.  `/api/task/[taskId]` (在 `app/api/task/[taskId]/route.ts`) 查询第三方服务的任务状态和结果。
@@ -45,7 +45,14 @@
 
 ## 数据流转与状态管理
 
--   **主要状态管理**：在 `app/page.tsx` 中使用 `useState` 管理应用的核心状态，包括相机激活状态、拍摄的图片、目标语言、任务ID、任务状态、翻译进度、翻译结果URL和错误信息。
+-   **主要状态管理**：在 `app/page.tsx` 中使用 `useState` 管理应用的核心状态，包括相机激活状态、拍摄的图片、源语言、目标语言、任务ID、任务状态、翻译进度、翻译结果URL和错误信息。
+-   **翻译状态类型**：定义了 `TranslationStatus` 类型，包含以下状态：
+    *   `Analyzing` - 初始分析阶段
+    *   `Waiting` - 排队等待中
+    *   `Processing` - 正在翻译
+    *   `Completed` - 翻译完成
+    *   `Terminated` - 翻译失败/终止
+    *   `NotSupported` - 不支持的内容
 -   **Token 获取**：通过 `useAuth` (Clerk) 获取用户会话Token，用于API请求认证。
 -   **API 通信**：
     *   图片上传：`POST /api/upload` (FormData)
@@ -70,9 +77,9 @@
 -   **认证**: 需要 Clerk Session Token (Bearer Token in Authorization header)
 -   **请求体参数**:
     -   `image`: (File) 拍摄的图片文件。
-    -   `targetLang`: (String) 目标翻译语言代码。
-    -   `fromLang` (可选): (String) 源语言代码 (当前后端固定为 `auto`)。
-    -   `shouldTranslateImage` (可选): (Boolean) 是否翻译图片 (当前后端固定为 `true`)。
+    -   `targetLang`: (String) 目标翻译语言名称（如 "English", "Vietnamese", "Simplified Chinese"）。
+    -   `fromLang`: (String) 源语言名称（必需参数）。
+    -   `userId`: (String) 用户ID（必需参数）。
 -   **成功响应 (200 OK)**:
     ```json
     {
@@ -106,7 +113,7 @@
 # 安装依赖 (项目使用 pnpm)
 pnpm install
 
-# 开发模式运行
+# 开发模式运行 (使用 Turbopack 加速)
 pnpm dev
 
 # 构建生产版本
@@ -122,7 +129,7 @@ pnpm start
 
 -   `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`: Clerk 的可发布密钥。
 -   `CLERK_SECRET_KEY`: Clerk 的秘密密钥 (用于后端验证)。
--   `SIMPLIFY_API_KEY`: 第三方翻译服务 (如 simplifyai.cn) 的 API 密钥。
+-   `TRANSLATION_API_KEY`: 第三方翻译服务 (如 simplifyai.cn) 的 API 密钥。
 
 ## 注意事项
 

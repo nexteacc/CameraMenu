@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     
     // 返回任务信息
     return NextResponse.json({
-      taskId: taskData.id,
+      taskId: taskData.taskId,
       status: taskData.status,
       progress: taskData.progress || 0,
       translatedFileUrl: taskData.translatedFileUrl,

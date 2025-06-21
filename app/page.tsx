@@ -7,11 +7,38 @@ import ResultsView from '../components/ResultsView';
 import LanguageSelector from '../components/LanguageSelector';
 import AuroraBackground from '../components/AuroraBackground';
 
+// Simplified status mapping based on actual API states
+type TranslationStatus = 
+  | 'Analyzing'     // Initial analysis phase
+  | 'Waiting'       // Waiting in queue
+  | 'Processing'    // Active translation
+  | 'Completed'     // Successfully completed
+  | 'Terminated'    // Failed/terminated
+  | 'NotSupported'; // Unsupported content
+
 interface TranslationTask {
   taskId: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
+  status: TranslationStatus;
   progress: number;
 }
+
+// Helper function to map API status to user-friendly display
+const getStatusDisplay = (status: TranslationStatus): string => {
+  switch (status) {
+    case 'Analyzing': return '分析中...';
+    case 'Waiting': return '排队中...';
+    case 'Processing': return '翻译中...';
+    case 'Completed': return '翻译完成';
+    case 'Terminated': return '翻译失败';
+    case 'NotSupported': return '不支持的内容';
+    default: return '处理中...';
+  }
+};
+
+// Helper function to determine if status is final
+const isFinalStatus = (status: TranslationStatus): boolean => {
+  return status === 'Completed' || status === 'Terminated' || status === 'NotSupported';
+};
 
 export default function Home() {
   // 状态管理
@@ -81,7 +108,7 @@ export default function Home() {
 
       setTranslationTask({
         taskId: resultData.taskId,
-        status: resultData.status as 'pending' | 'processing' | 'completed' | 'failed', // Cast status to be more specific
+        status: resultData.status as TranslationStatus,
         progress: 0 // Initialize progress
       });
       
@@ -157,35 +184,42 @@ export default function Home() {
         const resultData = await response.json();
         
         // 更新任务状态
+        const currentStatus = resultData.status as TranslationStatus;
         setTranslationTask({
           taskId: resultData.taskId,
-          status: resultData.status,
+          status: currentStatus,
           progress: resultData.progress || 0
         });
         
-        // 如果任务完成或失败
-        if (resultData.status === 'completed' || resultData.status === 'failed') {
+        // 如果任务达到最终状态
+        if (isFinalStatus(currentStatus)) {
           // 清除轮询计时器
           if (pollingTimerRef.current) {
             clearInterval(pollingTimerRef.current);
             pollingTimerRef.current = null;
           }
           
-          if (resultData.status === 'completed') {
+          if (currentStatus === 'Completed') {
             // 设置翻译后的图片URL
             setTranslatedImageUrl(resultData.translatedFileUrl);
             setErrorMessage(''); // 清除之前的错误信息（如果有）
           } else {
-            // 设置错误信息
-            setErrorMessage(resultData.error || '翻译失败');
+            // 设置错误信息 - 根据状态提供更具体的错误信息
+            let errorMsg = resultData.error || '翻译失败';
+            if (currentStatus === 'NotSupported') {
+              errorMsg = '文档内容不支持翻译，请尝试其他文档';
+            } else if (currentStatus === 'Terminated') {
+              errorMsg = resultData.error || '翻译任务被终止，请重试';
+            }
+            setErrorMessage(errorMsg);
           }
           
           // 切换到结果视图
           setCameraState('results');
         }
         
-        // 如果达到最大轮询次数且任务仍未完成/失败
-        if (pollCount >= maxPolls && (resultData.status !== 'completed' && resultData.status !== 'failed')) {
+        // 如果达到最大轮询次数且任务仍未完成
+        if (pollCount >= maxPolls && !isFinalStatus(currentStatus)) {
           if (pollingTimerRef.current) {
             clearInterval(pollingTimerRef.current);
             pollingTimerRef.current = null;
@@ -248,17 +282,26 @@ export default function Home() {
       const resultData = await response.json();
       
       // 更新任务状态
+      const retryStatus = resultData.status as TranslationStatus;
       setTranslationTask({
         taskId: resultData.taskId,
-        status: resultData.status,
+        status: retryStatus,
         progress: resultData.progress || 0
       });
       
-      // setCurrentTaskId(resultData.taskId);
-      
       // 如果任务已完成，直接显示结果
-      if (resultData.status === 'completed') {
-        setTranslatedImageUrl(resultData.translatedImageUrl);
+      if (retryStatus === 'Completed') {
+        setTranslatedImageUrl(resultData.translatedFileUrl);
+        setCameraState('results');
+      } else if (isFinalStatus(retryStatus)) {
+        // 如果是其他最终状态（失败），显示错误
+        let errorMsg = resultData.error || '翻译失败';
+        if (retryStatus === 'NotSupported') {
+          errorMsg = '文档内容不支持翻译，请尝试其他文档';
+        } else if (retryStatus === 'Terminated') {
+          errorMsg = resultData.error || '翻译任务被终止，请重试';
+        }
+        setErrorMessage(errorMsg);
         setCameraState('results');
       } else {
         // 否则开始轮询任务状态
@@ -370,7 +413,9 @@ export default function Home() {
         <div className="flex flex-col items-center justify-center min-h-screen p-6">
           <div className="text-center bg-black/40 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-emerald-400 border-r-transparent border-l-transparent mb-6"></div>
-            <h2 className="text-2xl font-semibold mb-3 text-white">正在处理...</h2>
+            <h2 className="text-2xl font-semibold mb-3 text-white">
+              {translationTask ? getStatusDisplay(translationTask.status) : '正在处理...'}
+            </h2>
             <p className="text-emerald-200 text-lg">
               {translationTask ? `进度: ${Math.round(translationTask.progress * 100)}%` : '准备中...'}
             </p>

@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     // 当 fastCreation 为 true 时，第三方API通常只返回任务ID和初始状态
 
     return NextResponse.json({
-      taskId: translationData.id,
+      taskId: translationData.taskId,
       status: translationData.status, 
     });
     
