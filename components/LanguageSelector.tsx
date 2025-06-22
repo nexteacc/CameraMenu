@@ -16,7 +16,14 @@ const SUPPORTED_LANGUAGES = [
   { code: 'vi', name: 'Vietnamese' },
   { code: 'zh', name: 'Simplified Chinese' },
   { code: 'th', name: 'Thai' },
-  { code: 'ko', name: 'Korean' }
+  { code: 'ko', name: 'Korean' },
+  { code: 'ja', name: 'Japanese' },
+  { code: 'es', name: 'Spanish' },
+  { code: 'fr', name: 'French' },
+  { code: 'de', name: 'German' },
+  { code: 'it', name: 'Italian' },
+  { code: 'ar', name: 'Arabic' },
+  { code: 'ru', name: 'Russian' },
 ];
 
 

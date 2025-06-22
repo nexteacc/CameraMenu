@@ -24,7 +24,16 @@ interface ResultsViewProps {
 const LANGUAGE_OPTIONS = [
   { value: 'English', label: 'English' },
   { value: 'Vietnamese', label: 'Vietnamese' },
-  { value: 'Simplified Chinese', label: 'Simplified Chinese' }
+  { value: 'Simplified Chinese', label: 'Simplified Chinese' },
+  { value: 'Thai', label: 'Thai' },
+  { value: 'Korean', label: 'Korean' },
+  { value: 'Japanese', label: 'Japanese' },
+  { value: 'Spanish', label: 'Spanish' },
+  { value: 'French', label: 'French' },
+  { value: 'German', label: 'German' },
+  { value: 'Italian', label: 'Italian' },
+  { value: 'Arabic', label: 'Arabic' },
+  { value: 'Russian', label: 'Russian' }
 ];
 
 const ResultsView = ({
