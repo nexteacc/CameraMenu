@@ -3,6 +3,7 @@
 .env.local
 .env
 
+
 # dependencies
 /node_modules
 /.pnp
@@ -42,3 +43,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# other
+.APIhelp.md 
