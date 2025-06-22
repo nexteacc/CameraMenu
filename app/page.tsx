@@ -319,7 +319,6 @@ export default function Home() {
               <LanguageSelector 
                 selectedLanguage={selectedFromLanguage} 
                 onLanguageChange={handleFromLanguageChange} 
-                label="Select source language"
                 className="w-full text-base md:text-lg"
               />
             </div>
@@ -331,7 +330,6 @@ export default function Home() {
               <LanguageSelector 
                 selectedLanguage={selectedTargetLanguage} 
                 onLanguageChange={handleTargetLanguageChange} 
-                label="Select target language"
                 className="w-full text-base md:text-lg"
               />
             </div>
