@@ -306,10 +306,12 @@ export default function Home() {
     <AuroraBackground className="text-white">
       {cameraState === 'idle' && (
         <div className="flex flex-col items-center justify-center min-h-screen p-6 text-center">
-          <h1 className="text-4xl font-bold mb-6 text-black dark:text-white">Menu Translation</h1>
-          <p className="text-xl mb-8 max-w-md text-black dark:text-white">
-            Take photos of menus and get instant translations. Support multiple languages for seamless dining abroad.
-          </p>
+          <h1 className="text-4xl font-bold mb-6 text-black dark:text-white">CameraMenu</h1>
+          <div className="text-xl mb-8 max-w-md text-black dark:text-white text-left">
+            <p>Travel, Scan Any Menu</p>
+            <p>Spot allergens</p>
+            <p>Dine freely</p>
+          </div>
 
           <div className="flex flex-row items-stretch justify-center gap-2 sm:gap-4 mb-8 w-full max-w-3xl px-2">
             <div className="flex-1 flex flex-col items-center w-full">
