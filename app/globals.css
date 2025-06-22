@@ -173,22 +173,11 @@ button.learn-more .button-text {
   text-transform: uppercase;
 }
 
-/* button:hover .circle {
-  width: 100%;
-}
 
-button:hover .circle .icon.arrow {
-  background: #fff;
-  transform: translate(1rem, 0);
-}
-
-button:hover .button-text {
-  color: #fff;
-} */
 
 .idea-card {
   transition: background 0.18s, transform 0.12s;
-  /* 保证点击区域有圆角和边框 */
+
   border-radius: 8px;
   border: 1px solid #ddd;
   background: #fff;
@@ -197,7 +186,7 @@ button:hover .button-text {
   background: #e6edff;
   transform: scale(0.97);
 }
-/* 去掉video的控制条 */
+
 video::-webkit-media-controls {
   display: none !important;
 }

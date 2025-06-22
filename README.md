@@ -66,19 +66,7 @@
 5. **结果展示阶段**：
    - `ResultsView.tsx` → 使用`react-pdf`渲染PDF → 支持缩放和交互
 
-### 🔄 性能优化对比
 
-| 版本 | 数据转换次数 | 格式 | 性能 | OCR支持 |
-|------|-------------|------|------|--------|
-| v1.0 (旧版) | 4次转换 | JSON + base64 | 低 | ❌ |
-| v2.0 (优化) | 1次转换 | multipart/form-data | 高 | ✅ |
-
-**优化收益**：
-- ✅ 减少了3次不必要的数据转换
-- ✅ 使用正确的`multipart/form-data`格式
-- ✅ 启用图片OCR翻译功能
-- ✅ 提升上传性能和成功率
-- ✅ 统一字段命名（`toLang`）
 
 ## 数据流转与状态管理
 
@@ -96,14 +84,7 @@
     *   结果轮询：`GET /api/task/[taskId]`
 -   **Props 传递**：状态和回调函数通过 props 从 `page.tsx` 传递到子组件如 `CameraView.tsx` 和 `ResultsView.tsx`。
 
-## 移动端适配
 
-项目在设计时充分考虑了移动端适配：
-
--   使用 Tailwind CSS 的响应式类进行布局。
--   相机视图 (`CameraView.tsx`) 和结果视图 (`ResultsView.tsx`) 均针对移动设备优化。
--   `ResultsView.tsx` 中的 PDF 展示支持触摸手势缩放 (`touchAction: 'pan-y pinch-zoom'`)。
--   相机API优先使用后置摄像头 (`facingMode: "environment"`)。
 
 ## API 接口说明
 
@@ -167,10 +148,6 @@ pnpm start
 
 -   `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`: Clerk 的可发布密钥。
 -   `CLERK_SECRET_KEY`: Clerk 的秘密密钥 (用于后端验证)。
--   `TRANSLATION_API_KEY`: 第三方翻译服务 (如 simplifyai.cn) 的 API 密钥。
+-   `TRANSLATION_API_KEY`: 第三方翻译服务的 API 密钥。
 
-## 注意事项
-
--   **PDF.js Worker**: `react-pdf` 需要一个 PDF.js worker。当前代码中 `ResultsView.tsx` 使用 CDN (`//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`)。如果需要本地托管，应将 `pdf.worker.min.js` 从 `node_modules/pdfjs-dist/build/` 复制到 `/public` 目录，并更新 `pdfjs.GlobalWorkerOptions.workerSrc` 指向本地路径 (例如 `'/pdf.worker.min.js'`)。
--   **Clerk Token 验证**: 后端 API (`/api/upload/route.ts` 和 `/api/task/[taskId]/route.ts`) 中实际的 Clerk Token 验证逻辑（使用 `auth()` 或 `getAuth()`) 可能需要根据具体部署和Clerk版本进行检查和调整，确保其按预期工作。
 

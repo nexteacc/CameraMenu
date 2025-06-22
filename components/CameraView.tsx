@@ -5,14 +5,14 @@ interface CameraViewProps {
   onExit: () => void;
   onCapture: (image: Blob) => Promise<void>;
   isLoading?: boolean;
-  // selectedLanguage?: string; // 移除未使用的属性
+  
 }
 
 const CameraView = ({ onExit, onCapture, isLoading }: CameraViewProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  // 移除未使用的stream状态变量
+
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [cameraError, setCameraError] = useState<string>('');
   // const [isCameraStarting, setIsCameraStarting] = useState<boolean>(true); // Removed for direct preview
@@ -23,12 +23,12 @@ const CameraView = ({ onExit, onCapture, isLoading }: CameraViewProps) => {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: "environment",
-          width: { ideal: 1920 }, // 请求理想分辨率
+          width: { ideal: 1920 }, 
           height: { ideal: 1080 },
         },
       });
       streamRef.current = mediaStream;
-      setCameraError(''); // 清除之前的错误
+      setCameraError('');
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
         videoRef.current.play().catch(playError => {
@@ -39,13 +39,13 @@ const CameraView = ({ onExit, onCapture, isLoading }: CameraViewProps) => {
     } catch (error: unknown) {
       console.error("Error accessing camera:", error);
       if (error instanceof Error && error.name === 'NotAllowedError') {
-        setCameraError('相机权限被拒绝，请在浏览器设置中允许相机访问');
+        setCameraError('Camera permission denied. Please enable camera access in browser settings');
       } else if (error instanceof Error && error.name === 'NotFoundError') {
-        setCameraError('未找到相机设备');
+        setCameraError('No camera device found');
       } else if (error instanceof Error && error.name === 'NotSupportedError') {
-        setCameraError('浏览器不支持相机功能');
+        setCameraError('Browser does not support camera functionality');
       } else {
-        setCameraError('相机启动失败，请刷新页面重试');
+        setCameraError('Failed to start camera. Please refresh the page and try again');
       }
       // setIsCameraStarting(false); // Removed
     }
@@ -55,20 +55,20 @@ const CameraView = ({ onExit, onCapture, isLoading }: CameraViewProps) => {
     startCamera();
 
     return () => {
-      // 确保清理所有媒体轨道
+     
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => {
           track.stop();
         });
         streamRef.current = null;
       }
-      // 保存videoRef.current到变量中避免ESLint警告
+      
       const videoElement = videoRef.current;
       if (videoElement) {
         videoElement.srcObject = null;
       }
     };
-  }, []); // 空依赖数组，只在组件挂载时执行
+  }, []); 
 
   const capture = () => {
     if (!canvasRef.current || !videoRef.current) {
@@ -178,7 +178,7 @@ const CameraView = ({ onExit, onCapture, isLoading }: CameraViewProps) => {
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
             <div className="text-white text-center">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white mb-2"></div>
-              <p>处理中...</p>
+              <p>loading...</p>
             </div>
           </div>
         )}
@@ -194,7 +194,7 @@ const CameraView = ({ onExit, onCapture, isLoading }: CameraViewProps) => {
                 }}
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md transition-colors"
               >
-                重试
+                try again
               </button>
             </div>
           </div>

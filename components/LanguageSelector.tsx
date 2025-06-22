@@ -1,29 +1,31 @@
 import React from "react";
 
 interface LanguageSelectorProps {
-  selectedLanguage: string; // This will now store the language NAME
+  selectedLanguage: string;
   onLanguageChange: (languageName: string) => void;
   disabled?: boolean;
   loading?: boolean;
   error?: string;
   className?: string;
-  label?: string; // Optional label for the selector
+  label?: string;
 }
 
-// Supported languages with code and name only
+
 const SUPPORTED_LANGUAGES = [
   { code: 'en', name: 'English' },
   { code: 'vi', name: 'Vietnamese' },
-  { code: 'zh', name: 'Simplified Chinese' }
+  { code: 'zh', name: 'Simplified Chinese' },
+  { code: 'th', name: 'Thai' },
+  { code: 'ko', name: 'Korean' }
 ];
 
-// Helper function to get language code from name
+
 export const getLanguageCode = (name: string): string => {
   const language = SUPPORTED_LANGUAGES.find(lang => lang.name === name);
   return language?.code || 'en';
 };
 
-// Helper function to get language name from code
+
 export const getLanguageName = (code: string): string => {
   const language = SUPPORTED_LANGUAGES.find(lang => lang.code === code);
   return language?.name || 'English';
@@ -36,7 +38,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   loading = false,
   error,
   className,
-  label // Destructure the label prop here
+  label
 }) => {
   const handleSelectionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedLangName = event.target.value;
@@ -53,17 +55,16 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         value={selectedLanguage}
         onChange={handleSelectionChange}
         disabled={disabled || loading}
-        // Tailwind classes for a native select that tries to match the previous styling somewhat
-        // Increased padding py-3 px-4, adjusted min-width, and ensured w-full
+
         className={`capitalize min-w-[150px] sm:min-w-[200px] w-full py-3 px-4 border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 ${className}`}
-        aria-label={label || "语言选择"}
+        aria-label={label || "Language selection"}
       >
-        {loading && <option value="" disabled>加载中...</option>} 
+        {loading && <option value="" disabled>Loading...</option>} 
         {!loading && SUPPORTED_LANGUAGES.map((language) => (
           <option 
             key={language.code} 
             value={language.name}
-            // Basic styling for options, though direct styling of <option> is limited
+
             className="text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-800"
           > 
             {language.name}
