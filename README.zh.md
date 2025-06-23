@@ -159,8 +159,11 @@ pnpm start
 
 ## 现在的情况
 ✅UI界面已经设计完成
+
 ✅Pitch已经设计完成
+
 ✅项目目标也定位清楚
+
 ❌后端的翻译服务调用还存在问题，还没有打通，我还在研究问题出现在了哪里。
 
 https://cameramenu.typedream.app/
