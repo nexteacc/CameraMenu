@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     const fromLang = formData.get('fromLang') as string;
     const userId = formData.get('userId') as string;
 
-    // 验证必需的参数
+    
     if (!image || !toLang || !fromLang || !userId) {
       return NextResponse.json(
         { error: 'Missing required parameters: image, toLang, fromLang, userId' },
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 验证 Authorization header
+   
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
@@ -25,14 +25,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 创建新的FormData发送给第三方API
+
     const apiFormData = new FormData();
     apiFormData.append('file', image);
     apiFormData.append('fromLang', fromLang);
     apiFormData.append('toLang', toLang);
-    apiFormData.append('shouldTranslateImage', 'true'); // 启用图片OCR翻译
+    apiFormData.append('shouldTranslateImage', 'true'); 
 
-    // 调用第三方翻译 API
     const apiResponse = await fetch(`${process.env.TRANSLATION_API_BASE_URL}/api/v1/translations`, {
       method: 'POST',
       headers: {
@@ -44,14 +43,14 @@ export async function POST(request: NextRequest) {
     if (!apiResponse.ok) {
       const errorData = await apiResponse.json();
       return NextResponse.json({ 
-        error: errorData.message || '翻译服务调用失败' 
+        error: errorData.message || 'Translation service call failed' 
       }, { status: apiResponse.status });
     }
     
     const translationData = await apiResponse.json();
     
-    // 返回任务信息
-    // 当 fastCreation 为 true 时，第三方API通常只返回任务ID和初始状态
+    // Return task information
+    // When fastCreation is true, third-party API usually only returns task ID and initial status
 
     return NextResponse.json({
       taskId: translationData.taskId,
@@ -59,9 +58,9 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('上传处理错误:', error);
+    console.error('Upload processing error:', error);
     return NextResponse.json({ 
-      error: '服务器内部错误' 
+      error: 'Internal server error' 
     }, { status: 500 });
   }
 }

@@ -2,27 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    // 从URL中获取任务ID
+    // Get task ID from URL
     const taskId = request.nextUrl.pathname.split('/').pop();
     
     if (!taskId) {
-      return NextResponse.json({ error: '缺少任务ID' }, { status: 400 });
+      return NextResponse.json({ error: 'Missing task ID' }, { status: 400 });
     }
     
-    // 验证用户认证（从请求头获取token）
+    // Verify user authentication (get token from request header)
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized access' }, { status: 401 });
     }
     
-    // 提取token
+    // Extract token
     // const token = authHeader.split(' ')[1];
     
-    // 这里可以添加token验证逻辑
-    // 注意：实际生产环境中应该验证token的有效性
-    // 例如：验证JWT token或调用认证服务
+    // Token validation logic can be added here
+    // Note: In production environment, token validity should be verified
+    // For example: Validate JWT token or call authentication service
     
-    // 调用第三方翻译API查询任务状态
+    // Call third-party translation API to check task status
     const apiResponse = await fetch(`${process.env.TRANSLATION_API_BASE_URL}/api/v1/translations/${taskId}`, {
       method: 'GET',
       headers: {
@@ -30,17 +30,16 @@ export async function GET(request: NextRequest) {
         'Content-Type': 'application/json'
       }
     });
-    
     if (!apiResponse.ok) {
       const errorData = await apiResponse.json();
       return NextResponse.json({ 
-        error: errorData.message || '获取翻译任务状态失败' 
+        error: errorData.message || 'Failed to get translation task status' 
       }, { status: apiResponse.status });
     }
     
     const taskData = await apiResponse.json();
     
-    // 返回任务信息
+    // Return task information
     return NextResponse.json({
       taskId: taskData.taskId,
       status: taskData.status,
@@ -50,9 +49,9 @@ export async function GET(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('任务查询错误:', error);
+    console.error('Task query error:', error);
     return NextResponse.json({ 
-      error: '服务器内部错误' 
+      error: 'Internal server error' 
     }, { status: 500 });
   }
 }
