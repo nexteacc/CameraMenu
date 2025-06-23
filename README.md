@@ -1,153 +1,157 @@
-# CameraMenu - 菜单翻译应用
+# CameraMenu - Menu Translation App
 
-这是一个基于 Next.js (App Router) 开发的现代化 Web 应用，主要功能是拍摄菜单照片并将其翻译成不同语言。项目采用了 React 和 TypeScript，并使用了 Tailwind CSS 进行样式设计。用户认证通过 Clerk 实现。
+**语言版本 / Language Versions:**
+[🇨🇳 简体中文](README.zh.md) | [🇺🇸 English](README.md)
 
-## 项目架构
+---
 
-项目采用了 Next.js 的 App Router 架构，主要文件和目录结构如下：
+This is a modern web application built with Next.js (App Router) that allows users to take photos of menus and translate them into different languages. The project uses React and TypeScript, with Tailwind CSS for styling and Clerk for user authentication.
 
--   `/app` - 包含应用的主要页面、API路由和布局。
-    -   `/app/api` - 后端 API 接口，包括图片上传 (`/upload`) 和任务状态查询 (`/task/[taskId]`)。
-    -   `/app/page.tsx` - 应用主页面，处理相机交互、状态管理和API调用。
-    -   `/app/layout.tsx` - 应用的根布局。
--   `/components` - 包含可复用的 UI 组件。
-    -   `CameraView.tsx` - 相机预览和拍照组件。
-    -   `ResultsView.tsx` - 展示翻译结果（PDF格式）的组件，支持手势缩放。
-    -   `LanguageSelector.tsx` - 语言选择组件。
-    -   `CameraButton.tsx` - 启动相机的按钮。
-    -   `AuroraBackground.tsx` - 美观的背景组件。
--   `/lib` - 包含工具函数 (例如 `utils.ts`)。
--   `/public` - 包含静态资源 (例如 `pdf.worker.min.js` 如果本地托管)。
+## Project Architecture
 
-## 核心功能
+The project uses Next.js App Router architecture with the following main files and directory structure:
 
-1.  **用户认证**：使用 Clerk 进行用户认证，保护API接口。
-2.  **相机拍照**：通过浏览器的 MediaDevices API 访问设备相机，拍摄菜单照片。
-3.  **图片上传与翻译任务创建**：将拍摄的菜单照片和目标语言上传到后端 `/api/upload` 接口，后端调用第三方服务进行OCR和翻译，并返回任务ID。
-4.  **异步任务轮询与结果获取**：前端通过轮询 `/api/task/[taskId]` 接口获取翻译任务的状态和最终的翻译结果URL（PDF格式）。
-5.  **PDF结果展示与交互**：在 `ResultsView.tsx` 组件中使用 `react-pdf` 展示翻译后的PDF文件，支持在移动设备上通过双指手势进行缩放，在桌面设备上通过鼠标滚轮缩放。
-6.  **双语言选择支持**：用户可以选择源语言和目标翻译语言，支持 English、Vietnamese、Simplified Chinese 三种语言。
+- `/app` - Contains the main application pages, API routes, and layouts.
+  - `/app/api` - Backend API endpoints, including image upload (`/upload`) and task status queries (`/task/[taskId]`).
+  - `/app/page.tsx` - Main application page handling camera interactions, state management, and API calls.
+  - `/app/layout.tsx` - Root application layout.
+  - `/components` - Contains reusable UI components.
+    - `CameraView.tsx` - Camera preview and photo capture component.
+    - `ResultsView.tsx` - Component for displaying translation results (PDF format) with gesture zoom support.
+    - `LanguageSelector.tsx` - Language selection component.
+    - `CameraButton.tsx` - Camera activation button.
+    - `AuroraBackground.tsx` - Beautiful background component.
+  - `/lib` - Contains utility functions (e.g., `utils.ts`).
+  - `/public` - Contains static assets (e.g., `pdf.worker.min.js` if hosted locally).
 
-## 工作流程
+## Core Features
 
-1.  用户通过 Clerk 登录应用。
-2.  在主页面 (`page.tsx`)，用户选择源语言和目标翻译语言。
-3.  用户点击拍照按钮，激活 `CameraView.tsx`。
-4.  用户拍摄菜单照片并确认。
-5.  `page.tsx` 中的 `handleCapture` 函数将图片数据 (Blob)、源语言和目标语言通过 FormData 上传到 `/api/upload`。
-6.  `/api/upload` (在 `app/api/upload/route.ts`) 接收请求，进行Token验证，然后调用第三方翻译服务创建翻译任务，并返回 `taskId` 和`status`。
-7.  `page.tsx` 接收到 `taskId` 后，启动 `pollTranslationResult` 函数，该函数定期调用 `/api/task/[taskId]`。
-8.  `/api/task/[taskId]` (在 `app/api/task/[taskId]/route.ts`) 查询第三方服务的任务状态和结果。
-9.  轮询直到任务完成（`status === 'Completed'`）并且获取到 `translatedFileUrl` (PDF链接)，或者任务失败。
-10. `page.tsx` 更新状态，并将 `translatedFileUrl` 和其他相关信息传递给 `ResultsView.tsx`。
-11. `ResultsView.tsx` 使用 `react-pdf` 加载并显示PDF，用户可以通过手势或滚轮进行缩放。
-12. 用户可以进行重拍、返回或重试操作。
+1. **User Authentication**: Uses Clerk for user authentication to protect API endpoints.
+2. **Camera Photography**: Accesses device camera through browser's MediaDevices API to capture menu photos.
+3. **Image Upload & Translation Task Creation**: Uploads captured menu photos and target language to backend `/api/upload` endpoint, which calls third-party services for OCR and translation, returning a task ID.
+4. **Asynchronous Task Polling & Result Retrieval**: Frontend polls `/api/task/[taskId]` endpoint to get translation task status and final translation result URL (PDF format).
+5. **PDF Result Display & Interaction**: Uses `react-pdf` in `ResultsView.tsx` component to display translated PDF files with pinch-to-zoom support on mobile devices.
+6. **Dual Language Selection Support**: Users can select source and target translation languages with multi-language support.
 
-## 数据流程详解
+## Workflow
 
-### 📸 图片数据流转路径
+1. User logs into the application through Clerk.
+2. On the main page (`page.tsx`), user selects source and target translation languages.
+3. User clicks the photo button to activate `CameraView.tsx`.
+4. User captures menu photo and confirms.
+5. The `handleCapture` function in `page.tsx` uploads image data (Blob), source language, and target language via FormData to `/api/upload`.
+6. `/api/upload` (in `app/api/upload/route.ts`) receives the request, performs token validation, then calls third-party translation service to create translation task, returning `taskId` and `status`.
+7. After receiving `taskId`, `page.tsx` starts the `pollTranslationResult` function, which periodically calls `/api/task/[taskId]`.
+8. `/api/task/[taskId]` (in `app/api/task/[taskId]/route.ts`) queries third-party service task status and results.
+9. Polling continues until task completion (`status === 'Completed'`) and `translatedFileUrl` (PDF link) is obtained, or task fails.
+10. `page.tsx` updates state and passes `translatedFileUrl` and other relevant information to `ResultsView.tsx`.
+11. `ResultsView.tsx` uses `react-pdf` to load and display PDF, allowing users to zoom via gestures or scroll wheel.
+12. Users can retake photos, go back, or retry operations.
 
-**优化后的数据流程（v2.0）**：
+## Data Flow Details
 
-1. **相机捕获阶段**：
-   - `CameraView.tsx` → Canvas绘制 → `canvas.toBlob()` → JPEG格式Blob对象
+### 📸 Image Data Flow Path
 
-2. **前端上传阶段**：
-   - `page.tsx` → 创建FormData → 添加image(Blob)、fromLang、toLang、userId → `fetch('/api/upload')`
+1. **Camera Capture Stage**:
+   - `CameraView.tsx` → Canvas drawing → `canvas.toBlob()` → JPEG format Blob object
 
-3. **后端转发阶段**（关键优化）：
-   - `route.ts` → 接收FormData → 直接创建新FormData → 添加`shouldTranslateImage: 'true'` → 转发给第三方API
-   - **格式**：`multipart/form-data`（符合API要求）
-   - **关键参数**：`shouldTranslateImage: 'true'` 启用图片OCR翻译
+2. **Frontend Upload Stage**:
+   - `page.tsx` → Create FormData → Add image(Blob), fromLang, toLang, userId → `fetch('/api/upload')`
 
-4. **API响应阶段**：
-   - 第三方API → 返回taskId → 前端开始轮询 → 最终获得`translatedFileUrl`（PDF文档链接）
+3. **Backend Forwarding Stage**:
+   - `route.ts` → Receive FormData → Create new FormData → Add `shouldTranslateImage: 'true'` → Forward to third-party API
+   - **Format**: `multipart/form-data` (meets API requirements)
+   - **Key Parameter**: `shouldTranslateImage: 'true'` enables image OCR translation
 
-5. **结果展示阶段**：
-   - `ResultsView.tsx` → 使用`react-pdf`渲染PDF → 支持缩放和交互
+4. **API Response Stage**:
+   - Third-party API → Return taskId → Frontend starts polling → Finally get `translatedFileUrl` (PDF document link)
 
+5. **Result Display Stage**:
+   - `ResultsView.tsx` → Use `react-pdf` to render PDF → Support zoom and interaction
 
+## Data Flow & State Management
 
-## 数据流转与状态管理
+- **Main State Management**: Uses `useState` in `app/page.tsx` to manage core application state, including camera activation status, captured images, source language, target language, task ID, task status, translation progress, translation result URL, and error information.
+- **Translation Status Types**: Defines `TranslationStatus` type with the following states:
+  - `Analyzing` - Initial analysis stage
+  - `Waiting` - Queued and waiting
+  - `Processing` - Currently translating
+  - `Completed` - Translation completed
+  - `Terminated` - Translation failed/terminated
+  - `NotSupported` - Unsupported content
+- **Token Retrieval**: Uses `useAuth` (Clerk) to get user session token for API request authentication.
+- **API Communication**:
+  - Image upload: `POST /api/upload` (FormData)
+  - Result polling: `GET /api/task/[taskId]`
+- **Props Passing**: State and callback functions are passed via props from `page.tsx` to child components like `CameraView.tsx` and `ResultsView.tsx`.
 
--   **主要状态管理**：在 `app/page.tsx` 中使用 `useState` 管理应用的核心状态，包括相机激活状态、拍摄的图片、源语言、目标语言、任务ID、任务状态、翻译进度、翻译结果URL和错误信息。
--   **翻译状态类型**：定义了 `TranslationStatus` 类型，包含以下状态：
-    *   `Analyzing` - 初始分析阶段
-    *   `Waiting` - 排队等待中
-    *   `Processing` - 正在翻译
-    *   `Completed` - 翻译完成
-    *   `Terminated` - 翻译失败/终止
-    *   `NotSupported` - 不支持的内容
--   **Token 获取**：通过 `useAuth` (Clerk) 获取用户会话Token，用于API请求认证。
--   **API 通信**：
-    *   图片上传：`POST /api/upload` (FormData)
-    *   结果轮询：`GET /api/task/[taskId]`
--   **Props 传递**：状态和回调函数通过 props 从 `page.tsx` 传递到子组件如 `CameraView.tsx` 和 `ResultsView.tsx`。
-
-
-
-## API 接口说明
+## API Interface Documentation
 
 ### 1. `/api/upload`
 
--   **方法**: `POST`
--   **Content-Type**: `multipart/form-data`
--   **认证**: 需要 Clerk Session Token (Bearer Token in Authorization header)
--   **请求体参数**:
-    -   `image`: (File) 拍摄的图片文件。
-    -   `toLang`: (String) 目标翻译语言名称（如 "English", "Vietnamese", "Simplified Chinese"）。
-    -   `fromLang`: (String) 源语言名称（必需参数）。
-    -   `userId`: (String) 用户ID（必需参数）。
--   **内部处理**: 后端直接转发FormData到第三方API，自动添加 `shouldTranslateImage: 'true'` 参数启用OCR翻译。
--   **成功响应 (200 OK)**:
-    ```json
-    {
-      "taskId": "some-task-id",
-      "status": "Pending" // 或其他初始状态
-    }
-    ```
--   **错误响应**: 标准 HTTP 错误码 (如 400, 401, 500) 及错误信息。
+- **Method**: `POST`
+- **Content-Type**: `multipart/form-data`
+- **Authentication**: Requires Clerk Session Token (Bearer Token in Authorization header)
+- **Request Body Parameters**:
+  - `image`: (File) Captured image file.
+  - `toLang`: (String) Target translation language name (e.g., "English", "Vietnamese", "Simplified Chinese", "Thai", "Korean").
+  - `fromLang`: (String) Source language name (required parameter).
+  - `userId`: (String) User ID (required parameter).
+- **Internal Processing**: Backend directly forwards FormData to third-party API, automatically adding `shouldTranslateImage: 'true'` parameter to enable OCR translation.
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "taskId": "some-task-id",
+    "status": "Pending" // or other initial status
+  }
+  ```
+- **Error Response**: Standard HTTP error codes (e.g., 400, 401, 500) with error messages.
 
 ### 2. `/api/task/[taskId]`
 
--   **方法**: `GET`
--   **认证**: 需要 Clerk Session Token (Bearer Token in Authorization header)
--   **路径参数**:
-    -   `taskId`: (String) 由 `/api/upload` 返回的任务ID。
--   **成功响应 (200 OK)**:
-    ```json
-    {
-      "taskId": "some-task-id",
-      "status": "Completed", // "Processing", "Failed", etc.
-      "progress": 100,
-      "translatedFileUrl": "url-to-translated-pdf.pdf", // 状态为 Completed 时出现
-      "error": null // 或错误信息字符串
-    }
-    ```
--   **错误响应**: 标准 HTTP 错误码 (如 401, 404, 500) 及错误信息。
+- **Method**: `GET`
+- **Authentication**: Requires Clerk Session Token (Bearer Token in Authorization header)
+- **Path Parameters**:
+  - `taskId`: (String) Task ID returned by `/api/upload`.
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "taskId": "some-task-id",
+    "status": "Completed", // "Processing", "Failed", etc.
+    "progress": 100,
+    "translatedFileUrl": "url-to-translated-pdf.pdf", // appears when status is Completed
+    "error": null // or error message string
+  }
+  ```
+- **Error Response**: Standard HTTP error codes (e.g., 401, 404, 500) with error messages.
 
-## 开发与运行
+## Development & Running
 
 ```bash
-# 安装依赖 (项目使用 pnpm)
+# Install dependencies (project uses pnpm)
 pnpm install
 
-# 开发模式运行 (使用 Turbopack 加速)
+# Run in development mode (using Turbopack for acceleration)
 pnpm dev
 
-# 构建生产版本
+# Build production version
 pnpm build
 
-# 运行生产版本
+# Run production version
 pnpm start
 ```
 
-## 环境变量
+## Environment Variables
 
-项目需要以下环境变量 (通常在 `.env.local` 文件中配置):
+The project requires the following environment variables (usually configured in `.env.local` file):
 
--   `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`: Clerk 的可发布密钥。
--   `CLERK_SECRET_KEY`: Clerk 的秘密密钥 (用于后端验证)。
--   `TRANSLATION_API_KEY`: 第三方翻译服务的 API 密钥。
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`: Clerk's publishable key.
+- `CLERK_SECRET_KEY`: Clerk's secret key (for backend validation).
+- `TRANSLATION_API_KEY`: Third-party translation service API key.
+- `TRANSLATION_API_URL`: Third-party translation service API URL.
 
+## Future Plans
 
+1. Optimize frontend UI, improve user login functionality, and enhance user interaction flow.
+2. Allergen Alerts: Write code to call OpenAI API to analyze user-uploaded images for allergens and alert users.
+3. Long Image Sharing: Add functionality to generate long images combining translation results and allergen alert information for easy user saving and sharing.
