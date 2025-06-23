@@ -1,6 +1,6 @@
 # CameraMenu - Menu Translation App
 
-**语言版本 / Language Versions:**
+
 [🇨🇳 简体中文](README.zh.md) | [🇺🇸 English](README.md)
 
 ---
