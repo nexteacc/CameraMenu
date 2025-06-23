@@ -1,6 +1,6 @@
 # CameraMenu - 菜单翻译应用
 
-**语言版本 / Language Versions:**
+
 [🇨🇳 简体中文](README.zh.md) | [🇺🇸 English](README.md)
 
 ---
@@ -155,6 +155,15 @@ pnpm start
 -   `CLERK_SECRET_KEY`: Clerk 的秘密密钥 (用于后端验证)。
 -   `TRANSLATION_API_KEY`: 第三方翻译服务的 API 密钥。
 -   `TRANSLATION_API_URL`: 第三方翻译服务的 API URL。
+
+
+## 现在的情况
+✅UI界面已经设计完成
+✅Pitch已经设计完成
+✅项目目标也定位清楚
+❌后端的翻译服务调用还存在问题，还没有打通，我还在研究问题出现在了哪里。
+
+https://cameramenu.typedream.app/
 
 ## 接下来计划
 

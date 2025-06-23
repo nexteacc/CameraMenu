@@ -150,6 +150,14 @@ The project requires the following environment variables (usually configured in 
 - `TRANSLATION_API_KEY`: Third-party translation service API key.
 - `TRANSLATION_API_URL`: Third-party translation service API URL.
 
+## Current Status
+✅ UI interface design completed
+✅ Pitch design completed
+✅ Project goals clearly defined
+❌ Backend translation service integration still has issues and hasn't been fully connected. I'm still investigating where the problem lies.
+
+https://cameramenu.typedream.app/
+
 ## Future Plans
 
 1. Optimize frontend UI, improve user login functionality, and enhance user interaction flow.
