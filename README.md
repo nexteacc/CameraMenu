@@ -164,9 +164,9 @@ https://cameramenu.typedream.app/
 
 
 ## Team Building
-I need a partner to redesign the UI and user experience.
+🎨 I need a partner to redesign the UI and user experience.
 
-I need a partner to develop the backend code.
+💻 I need a partner to develop the backend code.
 
 ## Future Plans
 
