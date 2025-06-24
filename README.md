@@ -162,6 +162,11 @@ The project requires the following environment variables (usually configured in 
 
 https://cameramenu.typedream.app/
 
+
+## Team Building
+I need partners to redesign the UI and user experience.
+I need partners to develop the backend code.
+
 ## Future Plans
 
 1. Optimize frontend UI, improve user login functionality, and enhance user interaction flow.
