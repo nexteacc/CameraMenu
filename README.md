@@ -154,7 +154,7 @@ The project requires the following environment variables (usually configured in 
 
 ✅ UI interface design completed
 
-✅ Pitch design completed
+✅ Pitch design completed https://cameramenu.typedream.app/
 
 ✅ Project goals clearly defined
 
@@ -162,7 +162,7 @@ The project requires the following environment variables (usually configured in 
 
 ✅ MVP is a PWA application
 
-https://cameramenu.typedream.app/
+
 
 
 ## Team Building
@@ -179,3 +179,5 @@ https://cameramenu.typedream.app/
 🟢3. Long Image Sharing: Add functionality to generate long images combining translation results and allergen alert information for easy user saving and sharing.
 
 🟢4. Launch in Apple store and Google store
+
+
