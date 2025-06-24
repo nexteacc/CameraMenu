@@ -160,6 +160,8 @@ The project requires the following environment variables (usually configured in 
 
 ❌ Backend translation service integration still has issues and hasn't been fully connected. I'm still investigating where the problem lies.
 
+✅ MVP is a PWA application
+
 https://cameramenu.typedream.app/
 
 
@@ -170,7 +172,10 @@ https://cameramenu.typedream.app/
 
 ## Future Plans
 
-1. Optimize frontend UI, improve user login functionality, and enhance user interaction flow.
-2. Allergen Alerts: Write code to call OpenAI API to analyze user-uploaded images for allergens and alert users.
-3. Long Image Sharing: Add functionality to generate long images combining translation results and allergen alert information for easy user saving and sharing.
-4. Launch in Apple store and Google store
+🟢1. Optimize frontend UI, improve user login functionality, and enhance user interaction flow.
+
+🟢2. Allergen Alerts: Write code to call OpenAI API to analyze user-uploaded images for allergens and alert users.
+
+🟢3. Long Image Sharing: Add functionality to generate long images combining translation results and allergen alert information for easy user saving and sharing.
+
+🟢4. Launch in Apple store and Google store
