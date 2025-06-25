@@ -41,11 +41,11 @@ const isFinalStatus = (status: TranslationStatus): boolean => {
 };
 
 export default function Home() {
-  const [cameraState, setCameraState] = useState<'idle' | 'active' | 'processing' | 'results'>('idle');
+  const [cameraState, setCameraState] = useState<'idle' | 'active' | 'processing' | 'results'>('results');
   const [selectedTargetLanguage, setSelectedTargetLanguage] = useState<string>('English');
   const [selectedFromLanguage, setSelectedFromLanguage] = useState<string>('Simplified Chinese');
   const [translationTask, setTranslationTask] = useState<TranslationTask | null>(null);
-  const [translatedFileUrl, setTranslatedFileUrl] = useState<string | null>(null);
+  const [translatedFileUrl, setTranslatedFileUrl] = useState<string | null>("https://ai-trs.oss.simplifyai.cn/private/trsb-runner/translatorentitytask/5901c9bc-e99a-4548-9de4-b9a3d4ad8e94.pdf?OSSAccessKeyId=LTAI5tRiqSSi7zKGfT92Y3o3&Expires=1750848248&Signature=uKRZvK2JAkly5TvvpOc%2BFvkeFr4%3D");
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [lastCapturedImage, setLastCapturedImage] = useState<Blob | null>(null);
   

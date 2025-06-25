@@ -27,8 +27,9 @@ const ResultsView = ({
   onBack,
   onRetry,
   errorMessage,
-  translatedFileUrl
+  // translatedFileUrl
 }: ResultsViewProps) => {
+  const translatedFileUrl = "https://ai-trs.oss.simplifyai.cn/private/trsb-runner/translatorentitytask/5901c9bc-e99a-4548-9de4-b9a3d4ad8e94.pdf?OSSAccessKeyId=LTAI5tRiqSSi7zKGfT92Y3o3&Expires=1750848248&Signature=uKRZvK2JAkly5TvvpOc%2BFvkeFr4%3D";
   const [imageLoading, setImageLoading] = useState(true); 
   const [imageError, setImageError] = useState(false); 
   const [numPages, setNumPages] = useState<number | null>(null);
@@ -138,44 +139,11 @@ const ResultsView = ({
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-6">
       <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <button
-            onClick={onBack}
-            className="flex items-center text-gray-400 hover:text-white transition-colors"
-            aria-label="Go back"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-              />
-            </svg>
-            Back
-          </button>
+        <div className="flex justify-center items-center mb-8">
           <h1 className="text-2xl font-bold">Translation Result</h1>
-          <div className="w-20"></div>
         </div>
 
-        {errorMessage ? (
-          <div className="bg-red-900/30 border border-red-500 rounded-lg p-4 mb-6 text-center" role="alert">
-            <p className="text-red-300">{errorMessage}</p>
-            <button
-              onClick={onRetry}
-              className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-800"
-              aria-label="Retry translation"
-            >
-              Retry
-            </button>
-          </div>
-        ) : null}
+        
 
 
         {!errorMessage && (
@@ -262,35 +230,7 @@ const ResultsView = ({
           </div>
         )}
 
-        <div className="mt-8 flex justify-center">
-          <button
-            onClick={onRetake}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-md transition-colors flex items-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800"
-            aria-label="Retake photo"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-            </svg>
-            Retake Photo
-          </button>
-        </div>
+        
 
 
       </div>
