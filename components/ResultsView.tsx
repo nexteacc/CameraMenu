@@ -43,9 +43,17 @@ const ResultsView = ({
   const [containerWidth, setContainerWidth] = useState<number>(0);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   
-
-  
   const pdfContainerRef = useRef<HTMLDivElement>(null);
+  
+  // 组件卸载时的全局清理
+  useEffect(() => {
+    return () => {
+      // 清理所有可能的blob URL
+      if (pdfBlobUrl) {
+        URL.revokeObjectURL(pdfBlobUrl);
+      }
+    };
+  }, []);
 
   // 移动端优化的PDF配置选项 - 确保原图质量
   const pdfOptions = {
@@ -150,13 +158,13 @@ const ResultsView = ({
     setImageError(true);
   }
 
-  // 触摸和滚轮缩放事件处理
+  // 触摸和滚轮缩放事件处理 - 修复闭包问题
   useEffect(() => {
     const container = pdfContainerRef.current;
     if (!container) return;
 
     let initialDistance = 0;
-    let currentScale = scale;
+    let initialScale = 1.0;
 
     const handleTouchStart = (event: TouchEvent) => {
       if (event.touches.length === 2) {
@@ -164,7 +172,11 @@ const ResultsView = ({
         const dx = event.touches[0].clientX - event.touches[1].clientX;
         const dy = event.touches[0].clientY - event.touches[1].clientY;
         initialDistance = Math.sqrt(dx * dx + dy * dy);
-        currentScale = scale;
+        // 使用当前的scale状态值
+        setScale(currentScale => {
+          initialScale = currentScale;
+          return currentScale;
+        });
       }
     };
 
@@ -175,7 +187,7 @@ const ResultsView = ({
         const dy = event.touches[0].clientY - event.touches[1].clientY;
         const newDistance = Math.sqrt(dx * dx + dy * dy);
         if (initialDistance > 0) {
-          const newScale = currentScale * (newDistance / initialDistance);
+          const newScale = initialScale * (newDistance / initialDistance);
           setScale(Math.min(Math.max(newScale, 0.5), 3.0));
         }
       }
@@ -183,8 +195,10 @@ const ResultsView = ({
 
     const handleWheel = (event: WheelEvent) => {
       event.preventDefault();
-      const newScale = scale - event.deltaY * 0.002; 
-      setScale(Math.min(Math.max(newScale, 0.5), 3.0));
+      setScale(currentScale => {
+        const newScale = currentScale - event.deltaY * 0.002;
+        return Math.min(Math.max(newScale, 0.5), 3.0);
+      });
     };
 
     container.addEventListener('touchstart', handleTouchStart, { passive: false });
@@ -196,7 +210,7 @@ const ResultsView = ({
       container.removeEventListener('touchmove', handleTouchMove);
       container.removeEventListener('wheel', handleWheel);
     };
-  }, [scale]);
+  }, []); // 移除scale依赖，避免重复绑定事件
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-6">
