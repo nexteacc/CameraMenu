@@ -77,8 +77,8 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * 设置CORS响应头
- * @param res 响应对象
+ *
+ * @param res 
  */
 function setCORSHeaders(res: Response) {
   res.headers.set('Access-Control-Allow-Origin', 'https://cameramenu.vercel.app');

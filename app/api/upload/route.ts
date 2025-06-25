@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * 设置CORS响应头
- * @param res 响应对象
+ *
+ * @param res 
  */
 function setCORSHeaders(res: Response) {
   res.headers.set('Access-Control-Allow-Origin', 'https://cameramenu.vercel.app');
@@ -58,12 +58,22 @@ export async function POST(request: NextRequest) {
     }
 
 
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const fileName = `camera-capture-${timestamp}.jpg`;
+    
+
+    const fileWithName = new File([image], fileName, {
+      type: 'image/jpeg',
+      lastModified: Date.now()
+    });
+    
     const apiFormData = new FormData();
-    apiFormData.append('file', image);
+    apiFormData.append('file', fileWithName); 
     apiFormData.append('fromLang', fromLang);
     apiFormData.append('toLang', toLang);
 
-    // 记录请求详情
+
     console.log('Making API request to:', `${process.env.TRANSLATION_API_BASE_URL}/api/v1/translations`);
     console.log('Request headers:', {
       'Authorization': `Bearer ${process.env.TRANSLATION_API_KEY ? '[PRESENT]' : '[MISSING]'}`
@@ -83,7 +93,7 @@ export async function POST(request: NextRequest) {
       body: apiFormData
     });
     
-    // 记录响应状态
+
     console.log('API Response status:', apiResponse.status);
     console.log('API Response headers:', Object.fromEntries(apiResponse.headers.entries()));
     
@@ -116,7 +126,7 @@ export async function POST(request: NextRequest) {
       status: translationData.status, 
     });
     
-    // 确保CORS头部被设置
+
     result.headers.set('Access-Control-Allow-Origin', 'https://cameramenu.vercel.app');
     result.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
     result.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -137,7 +147,7 @@ export async function POST(request: NextRequest) {
       details: error instanceof Error ? error.message : String(error)
     }, { status: 500 });
     
-    // 确保错误响应也有CORS头部
+
     errorResult.headers.set('Access-Control-Allow-Origin', 'https://cameramenu.vercel.app');
     errorResult.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
     errorResult.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
