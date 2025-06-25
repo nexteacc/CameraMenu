@@ -45,7 +45,7 @@ export default function Home() {
   const [selectedTargetLanguage, setSelectedTargetLanguage] = useState<string>('English');
   const [selectedFromLanguage, setSelectedFromLanguage] = useState<string>('Simplified Chinese');
   const [translationTask, setTranslationTask] = useState<TranslationTask | null>(null);
-  const [translatedFileUrl, setTranslatedFileUrl] = useState<string | null>(null);
+  // 移除translatedFileUrl状态，现在使用硬编码PDF
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [lastCapturedImage, setLastCapturedImage] = useState<Blob | null>(null);
   
@@ -153,7 +153,7 @@ export default function Home() {
           }
           
           if (currentStatus === 'Completed') {
-            setTranslatedFileUrl(resultData.translatedFileUrl);
+            // 移除setTranslatedFileUrl调用，现在使用硬编码PDF
             setErrorMessage('');
           } else {
             let errorMsg = resultData.error || 'Translation failed';
@@ -338,7 +338,6 @@ export default function Home() {
       
       {cameraState === 'results' && (
         <ResultsView 
-          translatedFileUrl={translatedFileUrl || undefined}
           errorMessage={errorMessage}
           selectedLanguage={selectedTargetLanguage}
           onRetake={() => setCameraState('active')}

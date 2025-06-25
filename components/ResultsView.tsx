@@ -9,19 +9,29 @@ if (typeof window !== 'undefined') {
   pdfjs.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@4.8.69/build/pdf.worker.min.mjs';
 }
 
+// 翻译状态类型定义
+type TranslationStatus = 
+  | 'Analyzing'     // Initial analysis phase
+  | 'Waiting'       // Waiting in queue
+  | 'Processing'    // Active translation
+  | 'Completed'     // Successfully completed
+  | 'Terminated'    // Failed/terminated
+  | 'NotSupported'; // Unsupported content
+
+interface TranslationTask {
+  taskId: string;
+  status: TranslationStatus;
+  progress: number;
+}
+
 interface ResultsViewProps {
   onRetake: () => void;
   onBack: () => void;
   onRetry: () => void;
   errorMessage: string;
-  translatedFileUrl?: string; // 保留但不使用，内部使用硬编码URL
   selectedLanguage?: string;
   onLanguageChange?: (language: string) => void;
-  translationTask?: {
-    taskId: string;
-    status: string;
-    progress: number;
-  };
+  translationTask?: TranslationTask | null;
 }
 
 const ResultsView = ({
@@ -34,7 +44,7 @@ const ResultsView = ({
   translationTask,
 }: ResultsViewProps) => {
   // 硬编码PDF URL用于测试
-  const translatedFileUrl = "https://ai-trs.oss.simplifyai.cn/private/trsb-runner/translatorentitytask/5901c9bc-e99a-4548-9de4-b9a3d4ad8e94.pdf?OSSAccessKeyId=LTAI5tRiqSSi7zKGfT92Y3o3&Expires=1750848248&Signature=uKRZvK2JAkly5TvvpOc%2BFvkeFr4%3D";
+  const HARDCODED_PDF_URL = "https://ai-trs.oss.simplifyai.cn/private/trsb-runner/translatorentitytask/5901c9bc-e99a-4548-9de4-b9a3d4ad8e94.pdf?OSSAccessKeyId=LTAI5tRiqSSi7zKGfT92Y3o3&Expires=1750848248&Signature=uKRZvK2JAkly5TvvpOc%2BFvkeFr4%3D";
   
   const [imageLoading, setImageLoading] = useState(true); 
   const [imageError, setImageError] = useState(false); 
@@ -119,10 +129,8 @@ const ResultsView = ({
     };
   }, [pageWidth, calculateOptimalScale, safeSetState]);
 
-  // PDF获取和缓存逻辑 - 防竞态版本
+  // PDF获取和缓存逻辑 - 使用硬编码URL
   useEffect(() => {
-    if (!translatedFileUrl) return;
-
     safeSetState(() => {
       setImageLoading(true);
       setImageError(false);
@@ -134,7 +142,7 @@ const ResultsView = ({
 
     const fetchAndCachePdf = async () => {
       try {
-        const response = await fetch(translatedFileUrl, {
+        const response = await fetch(HARDCODED_PDF_URL, {
           signal: abortController.signal
         });
         
@@ -174,7 +182,7 @@ const ResultsView = ({
         URL.revokeObjectURL(currentBlobUrl);
       }
     };
-  }, [translatedFileUrl, safeSetState]);
+  }, [safeSetState]);
 
   // 自适应缩放效果
   useEffect(() => {
@@ -299,11 +307,9 @@ const ResultsView = ({
       setPdfBlobUrl(null);
     }
     
-    const hardcodedUrl = "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf";
-    
     const fetchPdf = async () => {
       try {
-        const response = await fetch(hardcodedUrl);
+        const response = await fetch(HARDCODED_PDF_URL);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -352,13 +358,13 @@ const ResultsView = ({
         {/* PDF显示区域 */}
         {!errorMessage && (
           <div className="mb-8 bg-gray-800 rounded-lg overflow-hidden shadow-xl">
-            {!translatedFileUrl && (
+            {imageLoading && !pdfBlobUrl && (
               <div className="p-8 text-center text-gray-400">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
-                <p>Waiting for translation result...</p>
+                <p>Loading PDF...</p>
               </div>
             )}
-            {translatedFileUrl && (
+            {pdfBlobUrl && (
               <div 
                 ref={outerContainerRef} 
                 className="relative w-full touch-manipulation" 
