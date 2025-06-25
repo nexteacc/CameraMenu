@@ -42,6 +42,7 @@ const ResultsView = ({
   const [scale, setScale] = useState<number>(1.0);
   const [containerWidth, setContainerWidth] = useState<number>(0);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
+  const [pageWidth, setPageWidth] = useState<number>(0);
   
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   
@@ -65,10 +66,24 @@ const ResultsView = ({
     useSystemFonts: false,
   };
 
-  // 智能计算最佳缩放比例 - 完全原图大小版本
-  const calculateOptimalScale = (containerWidth: number) => {
-    // 完全保持原图大小，就像浏览器原生PDF查看器
-    return 1.0; // 始终保持原始大小，不做任何自动缩放
+  /**
+   * 智能计算最佳缩放比例 - 自适应屏幕大小
+   * @param containerWidth 容器宽度
+   * @param pageWidth PDF页面原始宽度
+   * @returns 最佳缩放比例
+   */
+  const calculateOptimalScale = (containerWidth: number, pageWidth?: number) => {
+    if (!pageWidth || containerWidth <= 0) return 1.0;
+    
+    // 留出一些边距，避免PDF紧贴屏幕边缘
+    const margin = 32; // 16px * 2
+    const availableWidth = containerWidth - margin;
+    
+    // 计算适合屏幕的缩放比例
+    const scale = availableWidth / pageWidth;
+    
+    // 限制缩放范围，避免过小或过大
+    return Math.min(Math.max(scale, 0.3), 2.0);
   };
 
   // 监听容器尺寸变化
@@ -133,11 +148,11 @@ const ResultsView = ({
   }, [translatedFileUrl]);
 
   useEffect(() => {
-    if (pdfBlobUrl && containerWidth > 0) {
-      const optimalScale = calculateOptimalScale(containerWidth);
+    if (pdfBlobUrl && containerWidth > 0 && pageWidth > 0) {
+      const optimalScale = calculateOptimalScale(containerWidth, pageWidth);
       setScale(optimalScale);
     }
-  }, [pdfBlobUrl, containerWidth]);
+  }, [pdfBlobUrl, containerWidth, pageWidth]);
 
   /**
    * PDF文档加载成功回调
@@ -150,6 +165,16 @@ const ResultsView = ({
   }
 
   /**
+   * PDF页面加载成功回调 - 获取页面尺寸用于自适应缩放
+   */
+  function onPageLoadSuccess(page: any) {
+    if (page && page.width && !pageWidth) {
+      console.log('Page loaded, width:', page.width);
+      setPageWidth(page.width);
+    }
+  }
+
+  /**
    * PDF文档加载失败回调
    */
   function onDocumentLoadError(error: Error) {
@@ -158,21 +183,35 @@ const ResultsView = ({
     setImageError(true);
   }
 
-  // 触摸和滚轮缩放事件处理 - 修复闭包问题
+  // 触摸和滚轮缩放支持 - 改进版本
   useEffect(() => {
     const container = pdfContainerRef.current;
     if (!container) return;
 
     let initialDistance = 0;
-    let initialScale = 1.0;
+    let initialScale = 1;
+    let isZooming = false;
 
-    const handleTouchStart = (event: TouchEvent) => {
-      if (event.touches.length === 2) {
-        event.preventDefault();
-        const dx = event.touches[0].clientX - event.touches[1].clientX;
-        const dy = event.touches[0].clientY - event.touches[1].clientY;
-        initialDistance = Math.sqrt(dx * dx + dy * dy);
-        // 使用当前的scale状态值
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      setScale(prevScale => {
+        const newScale = prevScale + delta;
+        return Math.min(Math.max(newScale, 0.3), 3.0);
+      });
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        isZooming = true;
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        initialDistance = Math.sqrt(
+          Math.pow(touch2.clientX - touch1.clientX, 2) +
+          Math.pow(touch2.clientY - touch1.clientY, 2)
+        );
+        // 获取当前实际的scale值
         setScale(currentScale => {
           initialScale = currentScale;
           return currentScale;
@@ -180,37 +219,45 @@ const ResultsView = ({
       }
     };
 
-    const handleTouchMove = (event: TouchEvent) => {
-      if (event.touches.length === 2) {
-        event.preventDefault();
-        const dx = event.touches[0].clientX - event.touches[1].clientX;
-        const dy = event.touches[0].clientY - event.touches[1].clientY;
-        const newDistance = Math.sqrt(dx * dx + dy * dy);
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && isZooming) {
+        e.preventDefault();
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        const currentDistance = Math.sqrt(
+          Math.pow(touch2.clientX - touch1.clientX, 2) +
+          Math.pow(touch2.clientY - touch1.clientY, 2)
+        );
+        
         if (initialDistance > 0) {
-          const newScale = initialScale * (newDistance / initialDistance);
-          setScale(Math.min(Math.max(newScale, 0.5), 3.0));
+          const scaleChange = currentDistance / initialDistance;
+          const newScale = initialScale * scaleChange;
+          setScale(Math.min(Math.max(newScale, 0.3), 3.0));
         }
       }
     };
 
-    const handleWheel = (event: WheelEvent) => {
-      event.preventDefault();
-      setScale(currentScale => {
-        const newScale = currentScale - event.deltaY * 0.002;
-        return Math.min(Math.max(newScale, 0.5), 3.0);
-      });
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) {
+        isZooming = false;
+        initialDistance = 0;
+        initialScale = 1;
+      }
     };
 
+    // 添加事件监听器
+    container.addEventListener('wheel', handleWheel, { passive: false });
     container.addEventListener('touchstart', handleTouchStart, { passive: false });
     container.addEventListener('touchmove', handleTouchMove, { passive: false });
-    container.addEventListener('wheel', handleWheel, { passive: false });
+    container.addEventListener('touchend', handleTouchEnd, { passive: false });
 
     return () => {
+      container.removeEventListener('wheel', handleWheel);
       container.removeEventListener('touchstart', handleTouchStart);
       container.removeEventListener('touchmove', handleTouchMove);
-      container.removeEventListener('wheel', handleWheel);
+      container.removeEventListener('touchend', handleTouchEnd);
     };
-  }, []); // 移除scale依赖，避免重复绑定事件
+  }, []); // 不依赖scale，避免重复绑定
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-6">
@@ -301,32 +348,87 @@ const ResultsView = ({
                     </div>
                   </div>
                 ) : (
-                  <Document
-                    file={pdfBlobUrl}
-                    onLoadSuccess={onDocumentLoadSuccess}
-                    onLoadError={onDocumentLoadError}
-                    className="w-full" 
-                    loading={<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto my-4"></div>}
-                    options={{
-                      ...pdfOptions,
-                      isEvalSupported: false,
-                      disableAutoFetch: false,
-                      disableStream: false,
-                    }}
-                  >
-                    {/* 渲染所有页面 - 完全原图大小显示 */}
-                    {Array.from(new Array(numPages), (el, index) => (
-                      <Page 
-                        key={`page_${index + 1}`}
-                        pageNumber={index + 1} 
-                        scale={scale} // 使用动态缩放，支持用户手势缩放
-                        renderTextLayer={false} 
-                        renderAnnotationLayer={true}
-                        className="mb-4 shadow-lg max-w-full" // 添加max-w-full确保响应式
-                        // 不设置width，让PDF以原始尺寸显示
-                      />
-                    ))}
-                  </Document>
+                  <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+                      <h3 className="text-lg font-semibold text-gray-800">PDF预览</h3>
+                      
+                      {/* 缩放控制区域 */}
+                      <div className="flex items-center space-x-3">
+                        <button
+                          onClick={() => setScale(prev => Math.max(prev - 0.2, 0.3))}
+                          className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                          title="缩小"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                          </svg>
+                        </button>
+                        
+                        <span className="text-sm font-medium text-gray-600 min-w-[60px] text-center">
+                          {Math.round(scale * 100)}%
+                        </span>
+                        
+                        <button
+                          onClick={() => setScale(prev => Math.min(prev + 0.2, 3.0))}
+                          className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                          title="放大"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            if (containerWidth > 0 && pageWidth > 0) {
+                              const optimalScale = calculateOptimalScale(containerWidth, pageWidth);
+                              setScale(optimalScale);
+                            }
+                          }}
+                          className="px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm transition-colors"
+                          title="适应屏幕"
+                        >
+                          适应
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div 
+                       ref={pdfContainerRef}
+                       className="relative overflow-auto" 
+                       style={{ 
+                         height: '70vh',
+                         touchAction: 'none' // 禁用默认触摸行为，支持自定义缩放
+                       }}
+                     >
+                      <Document
+                        file={pdfBlobUrl}
+                        onLoadSuccess={onDocumentLoadSuccess}
+                        onLoadError={onDocumentLoadError}
+                        className="w-full" 
+                        loading={<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto my-4"></div>}
+                        options={{
+                          ...pdfOptions,
+                          isEvalSupported: false,
+                          disableAutoFetch: false,
+                          disableStream: false,
+                        }}
+                      >
+                        {/* 渲染所有页面 - 自适应屏幕大小显示 */}
+                        {Array.from(new Array(numPages), (el, index) => (
+                          <Page 
+                            key={`page_${index + 1}`}
+                            pageNumber={index + 1} 
+                            scale={scale}
+                            onLoadSuccess={index === 0 ? onPageLoadSuccess : undefined} // 只在第一页获取尺寸
+                            renderTextLayer={false} 
+                            renderAnnotationLayer={true}
+                            className="mb-4 shadow-lg mx-auto" // 居中显示
+                          />
+                        ))}
+                      </Document>
+                    </div>
+                  </div>
                 )}
               </div>
             )}
