@@ -14,7 +14,14 @@ interface ResultsViewProps {
   onBack: () => void;
   onRetry: () => void;
   errorMessage: string;
-  translatedFileUrl?: string;
+  translatedFileUrl?: string; // 保留但不使用，内部使用硬编码URL
+  selectedLanguage?: string;
+  onLanguageChange?: (language: string) => void;
+  translationTask?: {
+    taskId: string;
+    status: string;
+    progress: number;
+  };
 }
 
 const ResultsView = ({
@@ -22,6 +29,9 @@ const ResultsView = ({
   onBack,
   onRetry,
   errorMessage,
+  selectedLanguage,
+  onLanguageChange,
+  translationTask,
 }: ResultsViewProps) => {
   // 硬编码PDF URL用于测试
   const translatedFileUrl = "https://ai-trs.oss.simplifyai.cn/private/trsb-runner/translatorentitytask/5901c9bc-e99a-4548-9de4-b9a3d4ad8e94.pdf?OSSAccessKeyId=LTAI5tRiqSSi7zKGfT92Y3o3&Expires=1750848248&Signature=uKRZvK2JAkly5TvvpOc%2BFvkeFr4%3D";
@@ -33,10 +43,7 @@ const ResultsView = ({
   const [containerWidth, setContainerWidth] = useState<number>(0);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   
-  // 添加测试状态
-  const [downloadProgress, setDownloadProgress] = useState<number>(0);
-  const [downloadSize, setDownloadSize] = useState<string>('');
-  const [cacheStatus, setCacheStatus] = useState<string>('未开始');
+
   
   const pdfContainerRef = useRef<HTMLDivElement>(null);
 
@@ -80,41 +87,25 @@ const ResultsView = ({
     setImageLoading(true);
     setImageError(false);
     setNumPages(null);
-    setCacheStatus('开始下载');
-    setDownloadProgress(0);
 
     /**
      * 获取并缓存PDF文件
-     * 支持进度跟踪和详细状态显示
      */
     const fetchAndCachePdf = async () => {
       try {
-        setCacheStatus('正在下载PDF...');
         const response = await fetch(translatedFileUrl);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        // 获取文件大小
-        const contentLength = response.headers.get('content-length');
-        const total = contentLength ? parseInt(contentLength, 10) : 0;
-        
-        if (total > 0) {
-          setDownloadSize(`${(total / 1024 / 1024).toFixed(2)} MB`);
-        }
-        
-        setCacheStatus('下载完成，创建本地缓存...');
         const blob = await response.blob();
         const blobUrl = URL.createObjectURL(blob);
         
         setPdfBlobUrl(blobUrl);
-        setCacheStatus('缓存创建成功');
-        setDownloadProgress(100);
         
       } catch (error) {
         console.error("Failed to fetch and cache PDF:", error);
-        setCacheStatus('下载失败');
         setImageError(true);
         setImageLoading(false);
       }
@@ -126,7 +117,6 @@ const ResultsView = ({
     return () => {
       if (pdfBlobUrl) {
         URL.revokeObjectURL(pdfBlobUrl);
-        setCacheStatus('缓存已清理');
       }
     };
   }, [translatedFileUrl]);
@@ -146,7 +136,6 @@ const ResultsView = ({
     setNumPages(nextNumPages);
     setImageLoading(false);
     setImageError(false);
-    setCacheStatus(`PDF加载成功 (${nextNumPages}页)`);
   }
 
   /**
@@ -156,7 +145,6 @@ const ResultsView = ({
     console.error('PDF load error:', error);
     setImageLoading(false);
     setImageError(true);
-    setCacheStatus('PDF加载失败');
   }
 
   // 触摸和滚轮缩放事件处理
@@ -210,27 +198,28 @@ const ResultsView = ({
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-6">
       <div className="max-w-4xl mx-auto">
-        <div className="flex justify-center items-center mb-8">
-          {/* 导航按钮保持不变 */}
-        </div>
 
-        {/* 测试信息显示区域 */}
-        <div className="mb-6 bg-gray-800 rounded-lg p-4">
-          <h3 className="text-lg font-semibold mb-3">PDF测试信息</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <p><span className="text-gray-400">PDF URL:</span> {translatedFileUrl ? '已设置' : '未设置'}</p>
-              <p><span className="text-gray-400">下载状态:</span> {cacheStatus}</p>
-              <p><span className="text-gray-400">文件大小:</span> {downloadSize || '计算中...'}</p>
+
+        {/* 错误信息显示 */}
+        {errorMessage && (
+          <div className="mb-6 bg-red-900/30 border border-red-500/30 rounded-lg p-4">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <span className="text-red-300 font-medium">错误信息</span>
             </div>
-            <div>
-              <p><span className="text-gray-400">本地缓存:</span> {pdfBlobUrl ? '已创建' : '未创建'}</p>
-              <p><span className="text-gray-400">页面数量:</span> {numPages || '未知'}</p>
-              <p><span className="text-gray-400">当前缩放:</span> {scale.toFixed(2)}x</p>
-            </div>
+            <p className="text-red-200 mt-2">{errorMessage}</p>
+            <button
+              onClick={onRetry}
+              className="mt-3 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors text-sm"
+            >
+              重试
+            </button>
           </div>
-        </div>
+        )}
 
+        {/* PDF显示区域 */}
         {!errorMessage && (
           <div className="mb-8 bg-gray-800 rounded-lg overflow-hidden shadow-xl">
             {!translatedFileUrl && (

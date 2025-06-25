@@ -67,69 +67,40 @@ export default function Home() {
   };
   
 
+  /**
+   * 处理拍照 - 测试模式：跳过后端API调用，直接展示硬编码PDF
+   * 用于测试PDF显示、下载和缓存功能
+   */
   const handleCapture = async (imageBlob: Blob) => {
     try {
-
+      // 保存拍摄的图片（用于重试功能）
       setLastCapturedImage(imageBlob);
       
-
-      setCameraState('processing');
+      // 清除之前的错误信息
       setErrorMessage('');
       
-
-      const token = await getToken();
+      // 模拟处理状态（可选，也可以直接跳转到结果页）
+      setCameraState('processing');
       
-
-      const formData = new FormData();
-      formData.append('image', imageBlob);
-      formData.append('fromLang', selectedFromLanguage);
-      formData.append('toLang', selectedTargetLanguage);
-      formData.append('userId', 'user123');
-      
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'upload failed');
-      }
-      
-      const resultData = await response.json();
-      
-
-      setTranslationTask({
-        taskId: resultData.taskId,
-        status: resultData.status as TranslationStatus,
-        progress: 0
-      });
-      
-
-      if (resultData.taskId) {
-        pollTranslationResult(resultData.taskId);
-      } else {
-        console.error('Failed to get task ID from /api/upload');
-        setErrorMessage('Unable to start translation task, please try again.');
+      // 模拟短暂的处理时间，然后直接跳转到结果页
+      setTimeout(() => {
+        // 设置模拟的翻译任务状态
+        setTranslationTask({
+          taskId: 'test-task-id-' + Date.now(),
+          status: 'Completed',
+          progress: 100
+        });
+        
+        // 直接跳转到结果页面，ResultsView组件内部会使用硬编码的PDF URL
         setCameraState('results');
-        if (pollingTimerRef.current) {
-          clearInterval(pollingTimerRef.current);
-          pollingTimerRef.current = null;
-        }
-      }
+        
+        console.log('测试模式：跳过后端API调用，直接展示硬编码PDF');
+      }, 1000); // 1秒后跳转，模拟处理时间
       
     } catch (error) {
       console.error('Photo processing error:', error);
       setErrorMessage((error as Error).message || 'Error processing image');
       setCameraState('results');
-      if (pollingTimerRef.current) {
-        clearInterval(pollingTimerRef.current);
-        pollingTimerRef.current = null;
-      }
     }
   };
   
@@ -220,6 +191,9 @@ export default function Home() {
     }, pollInterval);
   };
   
+  /**
+   * 处理重试 - 测试模式：跳过后端API调用，直接展示硬编码PDF
+   */
   const handleRetry = async () => {
     try {
       if (!lastCapturedImage) {
@@ -229,51 +203,20 @@ export default function Home() {
       setCameraState('processing');
       setErrorMessage('');
       
-      const token = await getToken();
-      
-      const formData = new FormData();
-      formData.append('image', lastCapturedImage);
-      formData.append('fromLang', selectedFromLanguage);
-      formData.append('toLang', selectedTargetLanguage);
-      formData.append('userId', 'user123');
-      
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Retry upload failed');
-      }
-      
-      const resultData = await response.json();
-      
-      const retryStatus = resultData.status as TranslationStatus;
-      setTranslationTask({
-        taskId: resultData.taskId,
-        status: retryStatus,
-        progress: resultData.progress || 0
-      });
-      
-      if (retryStatus === 'Completed') {
-        setTranslatedFileUrl(resultData.translatedFileUrl);
+      // 模拟短暂的处理时间，然后直接跳转到结果页
+      setTimeout(() => {
+        // 设置模拟的翻译任务状态
+        setTranslationTask({
+          taskId: 'retry-task-id-' + Date.now(),
+          status: 'Completed',
+          progress: 100
+        });
+        
+        // 直接跳转到结果页面，ResultsView组件内部会使用硬编码的PDF URL
         setCameraState('results');
-      } else if (isFinalStatus(retryStatus)) {
-        let errorMsg = resultData.error || 'Translation failed';
-        if (retryStatus === 'NotSupported') {
-          errorMsg = 'Document content is not supported for translation, please try another document';
-        } else if (retryStatus === 'Terminated') {
-          errorMsg = resultData.error || 'Translation task was terminated, please try again';
-        }
-        setErrorMessage(errorMsg);
-        setCameraState('results');
-      } else {
-        pollTranslationResult(resultData.taskId);
-      }
+        
+        console.log('测试模式重试：跳过后端API调用，直接展示硬编码PDF');
+      }, 800); // 稍短的处理时间
       
     } catch (error) {
       console.error('Retry error:', error);
@@ -282,17 +225,25 @@ export default function Home() {
     }
   };
   
+  /**
+   * 处理源语言切换 - 测试模式
+   */
   const handleFromLanguageChange = (languageName: string) => {
     setSelectedFromLanguage(languageName);
     if (cameraState === 'results' && lastCapturedImage) {
+      console.log('测试模式：源语言切换到', languageName);
       handleRetry();
     }
   };
 
+  /**
+   * 处理目标语言切换 - 测试模式
+   */
   const handleTargetLanguageChange = (languageName: string) => {
     setSelectedTargetLanguage(languageName);
     
     if (cameraState === 'results' && lastCapturedImage) {
+      console.log('测试模式：目标语言切换到', languageName);
       handleRetry();
     }
   };
