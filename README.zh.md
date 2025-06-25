@@ -61,9 +61,9 @@
    - `page.tsx` → 创建FormData → 添加image(Blob)、fromLang、toLang、userId → `fetch('/api/upload')`
 
 3. **后端转发阶段**：
-   - `route.ts` → 接收FormData → 直接创建新FormData → 添加`shouldTranslateImage: 'true'` → 转发给第三方API
+   - `route.ts` → 接收FormData → 直接创建新FormData → 转发给第三方API
    - **格式**：`multipart/form-data`（符合API要求）
-   - **关键参数**：`shouldTranslateImage: 'true'` 启用图片OCR翻译
+
 
 4. **API响应阶段**：
    - 第三方API → 返回taskId → 前端开始轮询 → 最终获得`translatedFileUrl`（PDF文档链接）
@@ -103,7 +103,7 @@
     -   `toLang`: (String) 目标翻译语言名称（如 "English", "Vietnamese", "Simplified Chinese"，“Thai”,"Korean"）。
     -   `fromLang`: (String) 源语言名称（必需参数）。
     -   `userId`: (String) 用户ID（必需参数）。
--   **内部处理**: 后端直接转发FormData到第三方API，自动添加 `shouldTranslateImage: 'true'` 参数启用OCR翻译。
+-   **内部处理**: 后端直接转发FormData到第三方API
 -   **成功响应 (200 OK)**:
     ```json
     {

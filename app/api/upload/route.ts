@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// 处理 CORS 相关的响应头
 function setCORSHeaders(res: Response) {
 res.headers.set('Access-Control-Allow-Origin', 'https://cameramenu.vercel.app');
   res.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -8,7 +7,7 @@ res.headers.set('Access-Control-Allow-Origin', 'https://cameramenu.vercel.app');
 }
 
 export async function OPTIONS() {
-  // 处理预检请求
+
   const res = new Response(null, { status: 200 });
   setCORSHeaders(res);
   return res;
@@ -43,7 +42,6 @@ export async function POST(request: NextRequest) {
     apiFormData.append('file', image);
     apiFormData.append('fromLang', fromLang);
     apiFormData.append('toLang', toLang);
-    apiFormData.append('shouldTranslateImage', 'true'); 
 
     const apiResponse = await fetch(`${process.env.TRANSLATION_API_BASE_URL}/api/v1/translations`, {
       method: 'POST',
@@ -62,8 +60,7 @@ export async function POST(request: NextRequest) {
     
     const translationData = await apiResponse.json();
     
-    // Return task information
-    // When fastCreation is true, third-party API usually only returns task ID and initial status
+
 
     return NextResponse.json({
       taskId: translationData.taskId,
@@ -76,7 +73,7 @@ export async function POST(request: NextRequest) {
       error: 'Internal server error' 
     }, { status: 500 });
   }
-  // 在返回前设置 CORS 头
+ 
   const res = new Response(JSON.stringify({ taskId, status }), { status: 200 });
   setCORSHeaders(res);
   return res;

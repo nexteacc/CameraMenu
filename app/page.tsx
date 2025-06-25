@@ -97,7 +97,7 @@ export default function Home() {
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || '上传失败');
+        throw new Error(errorData.error || 'upload failed');
       }
       
       const resultData = await response.json();

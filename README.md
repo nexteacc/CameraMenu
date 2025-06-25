@@ -59,9 +59,9 @@ The project uses Next.js App Router architecture with the following main files a
    - `page.tsx` → Create FormData → Add image(Blob), fromLang, toLang, userId → `fetch('/api/upload')`
 
 3. **Backend Forwarding Stage**:
-   - `route.ts` → Receive FormData → Create new FormData → Add `shouldTranslateImage: 'true'` → Forward to third-party API
+   - `route.ts` → Receive FormData → Create new FormData  → Forward to third-party API
    - **Format**: `multipart/form-data` (meets API requirements)
-   - **Key Parameter**: `shouldTranslateImage: 'true'` enables image OCR translation
+
 
 4. **API Response Stage**:
    - Third-party API → Return taskId → Frontend starts polling → Finally get `translatedFileUrl` (PDF document link)
@@ -97,7 +97,7 @@ The project uses Next.js App Router architecture with the following main files a
   - `toLang`: (String) Target translation language name (e.g., "English", "Vietnamese", "Simplified Chinese", "Thai", "Korean").
   - `fromLang`: (String) Source language name (required parameter).
   - `userId`: (String) User ID (required parameter).
-- **Internal Processing**: Backend directly forwards FormData to third-party API, automatically adding `shouldTranslateImage: 'true'` parameter to enable OCR translation.
+- **Internal Processing**: Backend directly forwards FormData to third-party API
 - **Success Response (200 OK)**:
   ```json
   {
