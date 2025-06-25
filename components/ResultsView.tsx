@@ -186,8 +186,7 @@ const ResultsView = ({
               </div>
             )}
             {translatedFileUrl && (
-
-            <div 
+              <div 
               ref={pdfContainerRef} 
               className="relative w-full flex flex-col items-center touch-manipulation overflow-auto" 
               style={{ touchAction: 'pan-y pinch-zoom' }}
