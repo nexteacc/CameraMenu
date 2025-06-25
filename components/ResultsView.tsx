@@ -238,13 +238,13 @@ const ResultsView = ({
                 </Document>
               )}
             </div>
+            )
 
             {!imageLoading && !imageError && numPages && (
               <div className="p-4 bg-gray-700 flex justify-end items-center">
                 <div className="text-sm text-gray-400">
                   Translated to: {getLanguageDisplayName(selectedLanguage)}
                 </div>
-
               </div>
             )}
             <div className="p-4 flex justify-end items-center bg-gray-800">
@@ -260,7 +260,8 @@ const ResultsView = ({
                   </option>
                 ))}
               </select>
-             </div>
+            </div>
+            }
           </div>
         )}
 
