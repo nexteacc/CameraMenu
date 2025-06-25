@@ -5,9 +5,10 @@ import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 
 
-// 配置PDF.js Worker - 使用完整的HTTPS URL确保兼容性
+// 配置PDF.js Worker - 移动端专用CDN配置确保兼容性
 if (typeof window !== 'undefined') {
-  pdfjs.GlobalWorkerOptions.workerSrc = `/lib/pdf.worker.mjs`;
+  // 直接使用4.8.69版本的CDN路径，避免版本变量解析问题
+  pdfjs.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@4.8.69/build/pdf.worker.min.mjs';
 }
 
 interface ResultsViewProps {
@@ -38,18 +39,61 @@ const ResultsView = ({
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
 
-  // 监听容器尺寸变化，优化移动端显示
+  // 移动端优化的PDF配置选项
+  const pdfOptions = {
+    // 使用CDN提供的cMaps，支持非拉丁字符
+    cMapUrl: 'https://unpkg.com/pdfjs-dist@4.8.69/cmaps/',
+    cMapPacked: true,
+    // 使用CDN提供的标准字体
+    standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@4.8.69/standard_fonts/',
+    // 移动端性能优化
+    maxImageSize: 1024 * 1024, // 限制图片大小
+    disableFontFace: false,
+    useSystemFonts: false,
+  };
+
+  // 获取设备特征信息
+  const getDeviceCharacteristics = () => {
+    const userAgent = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+    const isAndroid = /Android/.test(userAgent);
+    const isMobile = isIOS || isAndroid;
+    const pixelRatio = window.devicePixelRatio || 1;
+    
+    return { isIOS, isAndroid, isMobile, pixelRatio };
+  };
+
+  // 智能计算最佳缩放比例
+  const calculateOptimalScale = (containerWidth: number) => {
+    const { isMobile, pixelRatio } = getDeviceCharacteristics();
+    let baseScale = 1.0;
+    
+    if (isMobile) {
+      // 移动端：基于容器宽度动态计算
+      baseScale = Math.min(containerWidth / 600, 0.9);
+      
+      // 高分辨率屏幕微调
+      if (pixelRatio > 2) {
+        baseScale *= 1.1;
+      }
+    } else {
+      // 桌面端：保持原始大小或轻微缩放
+      baseScale = containerWidth < 1024 ? 0.9 : 1.0;
+    }
+    
+    return Math.max(0.5, Math.min(baseScale, 1.2));
+  };
+
+  // 监听容器尺寸变化，智能调整显示参数
   useEffect(() => {
     const updateContainerWidth = () => {
       if (pdfContainerRef.current) {
         const width = pdfContainerRef.current.clientWidth;
         setContainerWidth(width);
-        // 根据容器宽度自动调整初始缩放比例
-        if (width > 0 && width < 768) { // 移动端
-          setScale(0.8);
-        } else {
-          setScale(1.0);
-        }
+        
+        // 使用智能缩放计算
+        const optimalScale = calculateOptimalScale(width);
+        setScale(optimalScale);
       }
     };
 
@@ -92,14 +136,11 @@ const ResultsView = ({
     };
   }, [translatedFileUrl]);
 
-  useEffect(() => {
-    if (pdfBlobUrl) {
-      // Reset scale when a new PDF is loaded
-      if (containerWidth > 0 && containerWidth < 768) {
-        setScale(0.8);
-      } else {
-        setScale(1.0);
-      }
+   useEffect(() => {
+    if (pdfBlobUrl && containerWidth > 0) {
+      // 当新PDF加载时重置缩放比例
+      const optimalScale = calculateOptimalScale(containerWidth);
+      setScale(optimalScale);
     }
   }, [pdfBlobUrl, containerWidth]);
 
@@ -225,10 +266,7 @@ const ResultsView = ({
                   className="flex justify-center w-full overflow-auto" 
                   loading={<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto my-4"></div>}
                   options={{
-                    cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
-                    cMapPacked: true,
-                    standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
-                    disableWorker: false,
+                    ...pdfOptions, // 使用移动端优化配置
                     isEvalSupported: false,
                     disableAutoFetch: false,
                     disableStream: false,
