@@ -35,6 +35,7 @@ const ResultsView = ({
   const [numPages, setNumPages] = useState<number | null>(null);
   const [scale, setScale] = useState<number>(1.0);
   const [containerWidth, setContainerWidth] = useState<number>(0);
+  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
 
   // 监听容器尺寸变化，优化移动端显示
@@ -59,18 +60,48 @@ const ResultsView = ({
   }, []);
 
   useEffect(() => {
-    if (translatedFileUrl) {
-      setImageLoading(true);
-      setImageError(false);
-      setNumPages(null);
-      // 重置缩放比例
+    if (!translatedFileUrl) return;
+
+    setImageLoading(true);
+    setImageError(false);
+    setNumPages(null);
+
+    const fetchAndCachePdf = async () => {
+      try {
+        const response = await fetch(translatedFileUrl);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        setPdfBlobUrl(blobUrl);
+      } catch (error) {
+        console.error("Failed to fetch and cache PDF:", error);
+        setImageError(true);
+        setImageLoading(false);
+      }
+    };
+
+    fetchAndCachePdf();
+
+    // Cleanup function to revoke the blob URL
+    return () => {
+      if (pdfBlobUrl) {
+        URL.revokeObjectURL(pdfBlobUrl);
+      }
+    };
+  }, [translatedFileUrl]);
+
+  useEffect(() => {
+    if (pdfBlobUrl) {
+      // Reset scale when a new PDF is loaded
       if (containerWidth > 0 && containerWidth < 768) {
         setScale(0.8);
       } else {
         setScale(1.0);
       }
     }
-  }, [translatedFileUrl, containerWidth]);
+  }, [pdfBlobUrl, containerWidth]);
 
   function onDocumentLoadSuccess({ numPages: nextNumPages }: { numPages: number }) {
     console.log('PDF loaded successfully, pages:', nextNumPages);
@@ -188,13 +219,7 @@ const ResultsView = ({
                 </div>
               ) : (
                 <Document
-                  file={{
-                    url: translatedFileUrl,
-                    httpHeaders: {
-                      'Accept': 'application/pdf',
-                    },
-                    withCredentials: false,
-                  }}
+                  file={pdfBlobUrl}
                   onLoadSuccess={onDocumentLoadSuccess}
                   onLoadError={onDocumentLoadError}
                   className="flex justify-center w-full overflow-auto" 
