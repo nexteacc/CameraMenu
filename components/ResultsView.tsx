@@ -5,8 +5,9 @@ import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 
 
+// 配置PDF.js Worker - 使用完整的HTTPS URL确保兼容性
 if (typeof window !== 'undefined') {
-  pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+  pdfjs.GlobalWorkerOptions.workerSrc = `/lib/pdf.worker.mjs`;
 }
 
 interface ResultsViewProps {
@@ -14,59 +15,61 @@ interface ResultsViewProps {
   onBack: () => void;
   onRetry: () => void;
   errorMessage: string;
-  translatedFileUrl?: string; 
-  selectedLanguage: string;
-  onLanguageChange: (language: string) => void;
-  translationTask?: {
-    taskId: string;
-    status: string;
-    progress: number;
-  } | null;
+  translatedFileUrl?: string;
 }
 
 
 
-const LANGUAGE_OPTIONS = [
-  { value: 'English', label: 'English' },
-  { value: 'Vietnamese', label: 'Vietnamese' },
-  { value: 'Simplified Chinese', label: 'Simplified Chinese' },
-  { value: 'Thai', label: 'Thai' },
-  { value: 'Korean', label: 'Korean' },
-  { value: 'Japanese', label: 'Japanese' },
-  { value: 'Spanish', label: 'Spanish' },
-  { value: 'French', label: 'French' },
-  { value: 'German', label: 'German' },
-  { value: 'Italian', label: 'Italian' },
-  { value: 'Arabic', label: 'Arabic' },
-  { value: 'Russian', label: 'Russian' }
-];
+
 
 const ResultsView = ({
   onRetake,
   onBack,
   onRetry,
   errorMessage,
-  translatedFileUrl, 
-  selectedLanguage,
-  onLanguageChange,
-  translationTask
+  translatedFileUrl
 }: ResultsViewProps) => {
   const [imageLoading, setImageLoading] = useState(true); 
   const [imageError, setImageError] = useState(false); 
   const [numPages, setNumPages] = useState<number | null>(null);
-  const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.0);
+  const [containerWidth, setContainerWidth] = useState<number>(0);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
+
+  // 监听容器尺寸变化，优化移动端显示
+  useEffect(() => {
+    const updateContainerWidth = () => {
+      if (pdfContainerRef.current) {
+        const width = pdfContainerRef.current.clientWidth;
+        setContainerWidth(width);
+        // 根据容器宽度自动调整初始缩放比例
+        if (width > 0 && width < 768) { // 移动端
+          setScale(0.8);
+        } else {
+          setScale(1.0);
+        }
+      }
+    };
+
+    updateContainerWidth();
+    window.addEventListener('resize', updateContainerWidth);
+    
+    return () => window.removeEventListener('resize', updateContainerWidth);
+  }, []);
 
   useEffect(() => {
     if (translatedFileUrl) {
       setImageLoading(true);
       setImageError(false);
       setNumPages(null);
-      setPageNumber(1);
-      setScale(1.0);
+      // 重置缩放比例
+      if (containerWidth > 0 && containerWidth < 768) {
+        setScale(0.8);
+      } else {
+        setScale(1.0);
+      }
     }
-  }, [translatedFileUrl]);
+  }, [translatedFileUrl, containerWidth]);
 
   function onDocumentLoadSuccess({ numPages: nextNumPages }: { numPages: number }) {
     console.log('PDF loaded successfully, pages:', nextNumPages);
@@ -131,9 +134,7 @@ const ResultsView = ({
   }, [scale]);
 
 
-  const getLanguageDisplayName = (languageName: string): string => {
-    return languageName;
-  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-6">
       <div className="max-w-4xl mx-auto">
@@ -219,48 +220,45 @@ const ResultsView = ({
                 </div>
               ) : (
                 <Document
-                  file={translatedFileUrl}
+                  file={{
+                    url: translatedFileUrl,
+                    httpHeaders: {
+                      'Accept': 'application/pdf',
+                    },
+                    withCredentials: false,
+                  }}
                   onLoadSuccess={onDocumentLoadSuccess}
                   onLoadError={onDocumentLoadError}
                   className="flex justify-center w-full overflow-auto" 
                   loading={<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto my-4"></div>}
                   options={{
-                    cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
+                    cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
                     cMapPacked: true,
+                    standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
+                    disableWorker: false,
+                    isEvalSupported: false,
+                    disableAutoFetch: false,
+                    disableStream: false,
                   }}
                 >
-                  <Page 
-                    pageNumber={pageNumber} 
-                    scale={scale} 
-                    renderTextLayer={false} 
-                    renderAnnotationLayer={true} 
-                  />
+                  {/* 渲染所有页面 */}
+                  {Array.from(new Array(numPages), (el, index) => (
+                    <Page 
+                      key={`page_${index + 1}`}
+                      pageNumber={index + 1} 
+                      scale={scale} 
+                      renderTextLayer={false} 
+                      renderAnnotationLayer={true}
+                      width={containerWidth > 0 ? Math.min(containerWidth - 40, 800) : undefined}
+                      className="mb-4 shadow-lg"
+                    />
+                  ))}
                 </Document>
               )}
             </div>
             )}
 
-            {!imageLoading && !imageError && numPages && (
-              <div className="p-4 bg-gray-700 flex justify-end items-center">
-                <div className="text-sm text-gray-400">
-                  Translated to: {getLanguageDisplayName(selectedLanguage)}
-                </div>
-              </div>
-            )}
-            <div className="p-4 flex justify-end items-center bg-gray-800">
-              <select
-                value={selectedLanguage}
-                onChange={(e) => onLanguageChange(e.target.value)}
-                className="bg-gray-700 text-white border border-gray-600 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                aria-label="Target language"
-              >
-                {LANGUAGE_OPTIONS.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+
           </div>
         )}
 
@@ -294,54 +292,7 @@ const ResultsView = ({
           </button>
         </div>
 
-        {/* 展示上传API返回的结果信息 */}
-        {translationTask && (
-          <div className="mt-6 bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 border border-gray-700">
-            <h3 className="text-lg font-semibold mb-3 text-gray-200">翻译任务信息</h3>
-            {translatedFileUrl && (
-              <div className="mb-3 p-2 bg-gray-700 rounded text-xs">
-                <span className="text-gray-400">PDF URL:</span>
-                <div className="text-green-400 break-all mt-1">{translatedFileUrl}</div>
-              </div>
-            )}
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">任务ID:</span>
-                <span className="text-gray-200 font-mono text-xs bg-gray-700 px-2 py-1 rounded">
-                  {translationTask.taskId}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">状态:</span>
-                <span className={`px-2 py-1 rounded text-xs font-medium ${
-                  translationTask.status === 'Completed' ? 'bg-green-600 text-green-100' :
-                  translationTask.status === 'Processing' ? 'bg-blue-600 text-blue-100' :
-                  translationTask.status === 'Analyzing' ? 'bg-yellow-600 text-yellow-100' :
-                  translationTask.status === 'Waiting' ? 'bg-orange-600 text-orange-100' :
-                  translationTask.status === 'Terminated' ? 'bg-red-600 text-red-100' :
-                  translationTask.status === 'NotSupported' ? 'bg-gray-600 text-gray-100' :
-                  'bg-gray-600 text-gray-100'
-                }`}>
-                  {translationTask.status}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">进度:</span>
-                <div className="flex items-center space-x-2">
-                  <div className="w-20 bg-gray-700 rounded-full h-2">
-                    <div 
-                      className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${Math.round(translationTask.progress * 100)}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-gray-200 text-xs">
-                    {Math.round(translationTask.progress * 100)}%
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+
       </div>
     </div>
   );
