@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+/**
+ * 设置CORS响应头
+ * @param res 响应对象
+ */
 function setCORSHeaders(res: Response) {
-res.headers.set('Access-Control-Allow-Origin', 'https://cameramenu.vercel.app');
+  res.headers.set('Access-Control-Allow-Origin', 'https://cameramenu.vercel.app');
   res.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
-export async function OPTIONS() {
 
+export async function OPTIONS() {
   const res = new Response(null, { status: 200 });
   setCORSHeaders(res);
   return res;
@@ -22,19 +26,22 @@ export async function POST(request: NextRequest) {
 
     
     if (!image || !toLang || !fromLang || !userId) {
-      return NextResponse.json(
+      const errorResult = NextResponse.json(
         { error: 'Missing required parameters: image, toLang, fromLang, userId' },
         { status: 400 }
       );
+      errorResult.headers.set('Access-Control-Allow-Origin', 'https://cameramenu.vercel.app');
+      return errorResult;
     }
 
-   
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
+      const errorResult = NextResponse.json(
         { error: 'Missing or invalid Authorization header' },
         { status: 401 }
       );
+      errorResult.headers.set('Access-Control-Allow-Origin', 'https://cameramenu.vercel.app');
+      return errorResult;
     }
 
 
@@ -53,28 +60,40 @@ export async function POST(request: NextRequest) {
     
     if (!apiResponse.ok) {
       const errorData = await apiResponse.json();
-      return NextResponse.json({ 
+      const errorResult = NextResponse.json({ 
         error: errorData.message || 'Translation service call failed' 
       }, { status: apiResponse.status });
+      errorResult.headers.set('Access-Control-Allow-Origin', 'https://cameramenu.vercel.app');
+      return errorResult;
     }
     
     const translationData = await apiResponse.json();
     
 
 
-    return NextResponse.json({
+    const result = NextResponse.json({
       taskId: translationData.taskId,
       status: translationData.status, 
     });
     
+    // 确保CORS头部被设置
+    result.headers.set('Access-Control-Allow-Origin', 'https://cameramenu.vercel.app');
+    result.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    result.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    return result;
+    
   } catch (error) {
     console.error('Upload processing error:', error);
-    return NextResponse.json({ 
+    const errorResult = NextResponse.json({ 
       error: 'Internal server error' 
     }, { status: 500 });
+    
+    // 确保错误响应也有CORS头部
+    errorResult.headers.set('Access-Control-Allow-Origin', 'https://cameramenu.vercel.app');
+    errorResult.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    errorResult.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    return errorResult;
   }
- 
-  const res = new Response(JSON.stringify({ taskId, status }), { status: 200 });
-  setCORSHeaders(res);
-  return res;
 }

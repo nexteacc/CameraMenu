@@ -6,13 +6,17 @@ export async function GET(request: NextRequest) {
     const taskId = request.nextUrl.pathname.split('/').pop();
     
     if (!taskId) {
-      return NextResponse.json({ error: 'Missing task ID' }, { status: 400 });
+      const errorResult = NextResponse.json({ error: 'Missing task ID' }, { status: 400 });
+      errorResult.headers.set('Access-Control-Allow-Origin', 'https://cameramenu.vercel.app');
+      return errorResult;
     }
     
     // Verify user authentication (get token from request header)
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized access' }, { status: 401 });
+      const errorResult = NextResponse.json({ error: 'Unauthorized access' }, { status: 401 });
+      errorResult.headers.set('Access-Control-Allow-Origin', 'https://cameramenu.vercel.app');
+      return errorResult;
     }
     
     // Extract token
@@ -32,15 +36,17 @@ export async function GET(request: NextRequest) {
     });
     if (!apiResponse.ok) {
       const errorData = await apiResponse.json();
-      return NextResponse.json({ 
+      const errorResult = NextResponse.json({ 
         error: errorData.message || 'Failed to get translation task status' 
       }, { status: apiResponse.status });
+      errorResult.headers.set('Access-Control-Allow-Origin', 'https://cameramenu.vercel.app');
+      return errorResult;
     }
     
     const taskData = await apiResponse.json();
     
     // Return task information
-    return NextResponse.json({
+    const result = NextResponse.json({
       taskId: taskData.taskId,
       status: taskData.status,
       progress: taskData.progress || 0,
@@ -48,23 +54,40 @@ export async function GET(request: NextRequest) {
       error: taskData.error
     });
     
+  
+    result.headers.set('Access-Control-Allow-Origin', 'https://cameramenu.vercel.app');
+    result.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    result.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    return result;
+    
   } catch (error) {
     console.error('Task query error:', error);
-    return NextResponse.json({ 
+    const errorResult = NextResponse.json({ 
       error: 'Internal server error' 
     }, { status: 500 });
+    
+   
+    errorResult.headers.set('Access-Control-Allow-Origin', 'https://cameramenu.vercel.app');
+    errorResult.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    errorResult.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    return errorResult;
   }
 }
 
-// 处理 CORS 相关的响应头
+/**
+ * 设置CORS响应头
+ * @param res 响应对象
+ */
 function setCORSHeaders(res: Response) {
-  res.headers.set('Access-Control-Allow-Origin', '*');
+  res.headers.set('Access-Control-Allow-Origin', 'https://cameramenu.vercel.app');
   res.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
+
 export async function OPTIONS() {
-  // 处理预检请求
   const res = new Response(null, { status: 200 });
   setCORSHeaders(res);
   return res;
