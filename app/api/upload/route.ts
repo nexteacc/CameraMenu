@@ -1,5 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// 处理 CORS 相关的响应头
+function setCORSHeaders(res: Response) {
+res.headers.set('Access-Control-Allow-Origin', 'https://cameramenu.vercel.app');
+  res.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+}
+
+export async function OPTIONS() {
+  // 处理预检请求
+  const res = new Response(null, { status: 200 });
+  setCORSHeaders(res);
+  return res;
+}
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -63,4 +76,8 @@ export async function POST(request: NextRequest) {
       error: 'Internal server error' 
     }, { status: 500 });
   }
+  // 在返回前设置 CORS 头
+  const res = new Response(JSON.stringify({ taskId, status }), { status: 200 });
+  setCORSHeaders(res);
+  return res;
 }

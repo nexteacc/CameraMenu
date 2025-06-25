@@ -55,3 +55,17 @@ export async function GET(request: NextRequest) {
     }, { status: 500 });
   }
 }
+
+// 处理 CORS 相关的响应头
+function setCORSHeaders(res: Response) {
+  res.headers.set('Access-Control-Allow-Origin', '*');
+  res.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+}
+
+export async function OPTIONS() {
+  // 处理预检请求
+  const res = new Response(null, { status: 200 });
+  setCORSHeaders(res);
+  return res;
+}

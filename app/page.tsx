@@ -234,7 +234,7 @@ export default function Home() {
       const formData = new FormData();
       formData.append('image', lastCapturedImage);
       formData.append('fromLang', selectedFromLanguage);
-      formData.append('targetLang', selectedTargetLanguage);
+      formData.append('toLang', selectedTargetLanguage);
       formData.append('userId', 'user123');
       
       const response = await fetch('/api/upload', {
