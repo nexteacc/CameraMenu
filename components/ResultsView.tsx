@@ -80,13 +80,15 @@ const ResultsView = ({
     return () => window.removeEventListener('resize', updateContainerWidth);
   }, []);
 
-  // PDF获取和缓存逻辑 - 增强版本
+  // PDF获取和缓存逻辑 - 修复版本
   useEffect(() => {
     if (!translatedFileUrl) return;
 
     setImageLoading(true);
     setImageError(false);
     setNumPages(null);
+
+    let currentBlobUrl: string | null = null;
 
     /**
      * 获取并缓存PDF文件
@@ -101,6 +103,7 @@ const ResultsView = ({
         
         const blob = await response.blob();
         const blobUrl = URL.createObjectURL(blob);
+        currentBlobUrl = blobUrl;
         
         setPdfBlobUrl(blobUrl);
         
@@ -113,10 +116,10 @@ const ResultsView = ({
 
     fetchAndCachePdf();
 
-    // 清理函数
+    // 清理函数 - 使用局部变量避免闭包问题
     return () => {
-      if (pdfBlobUrl) {
-        URL.revokeObjectURL(pdfBlobUrl);
+      if (currentBlobUrl) {
+        URL.revokeObjectURL(currentBlobUrl);
       }
     };
   }, [translatedFileUrl]);
@@ -256,7 +259,26 @@ const ResultsView = ({
                         onClick={() => {
                           setImageError(false);
                           setImageLoading(true);
-                          onRetry(); 
+                          // 重新获取PDF，而不是触发整个应用重试
+                          const hardcodedUrl = "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf";
+                          
+                          const fetchPdf = async () => {
+                            try {
+                              const response = await fetch(hardcodedUrl);
+                              if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                              }
+                              const blob = await response.blob();
+                              const blobUrl = URL.createObjectURL(blob);
+                              setPdfBlobUrl(blobUrl);
+                            } catch (error) {
+                              console.error("Failed to reload PDF:", error);
+                              setImageError(true);
+                              setImageLoading(false);
+                            }
+                          };
+                          
+                          fetchPdf();
                         }}
                         className="mt-2 text-blue-400 hover:text-blue-300 underline"
                       >
