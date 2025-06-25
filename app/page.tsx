@@ -394,6 +394,7 @@ export default function Home() {
           onBack={handleExit}
           onRetry={handleRetry}
           onLanguageChange={handleTargetLanguageChange}
+          translationTask={translationTask}
         />
       )}
     </AuroraBackground>

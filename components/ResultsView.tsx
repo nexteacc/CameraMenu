@@ -17,6 +17,11 @@ interface ResultsViewProps {
   translatedFileUrl?: string; 
   selectedLanguage: string;
   onLanguageChange: (language: string) => void;
+  translationTask?: {
+    taskId: string;
+    status: string;
+    progress: number;
+  } | null;
 }
 
 
@@ -43,7 +48,8 @@ const ResultsView = ({
   errorMessage,
   translatedFileUrl, 
   selectedLanguage,
-  onLanguageChange
+  onLanguageChange,
+  translationTask
 }: ResultsViewProps) => {
   const [imageLoading, setImageLoading] = useState(true); 
   const [imageError, setImageError] = useState(false); 
@@ -273,6 +279,49 @@ const ResultsView = ({
             Retake Photo
           </button>
         </div>
+
+        {/* 展示上传API返回的结果信息 */}
+        {translationTask && (
+          <div className="mt-6 bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 border border-gray-700">
+            <h3 className="text-lg font-semibold mb-3 text-gray-200">翻译任务信息</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">任务ID:</span>
+                <span className="text-gray-200 font-mono text-xs bg-gray-700 px-2 py-1 rounded">
+                  {translationTask.taskId}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">状态:</span>
+                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                  translationTask.status === 'Completed' ? 'bg-green-600 text-green-100' :
+                  translationTask.status === 'Processing' ? 'bg-blue-600 text-blue-100' :
+                  translationTask.status === 'Analyzing' ? 'bg-yellow-600 text-yellow-100' :
+                  translationTask.status === 'Waiting' ? 'bg-orange-600 text-orange-100' :
+                  translationTask.status === 'Terminated' ? 'bg-red-600 text-red-100' :
+                  translationTask.status === 'NotSupported' ? 'bg-gray-600 text-gray-100' :
+                  'bg-gray-600 text-gray-100'
+                }`}>
+                  {translationTask.status}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">进度:</span>
+                <div className="flex items-center space-x-2">
+                  <div className="w-20 bg-gray-700 rounded-full h-2">
+                    <div 
+                      className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${Math.round(translationTask.progress * 100)}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-gray-200 text-xs">
+                    {Math.round(translationTask.progress * 100)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
