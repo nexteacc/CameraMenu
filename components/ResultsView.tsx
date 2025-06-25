@@ -238,7 +238,7 @@ const ResultsView = ({
                 </Document>
               )}
             </div>
-            )
+            )}
 
             {!imageLoading && !imageError && numPages && (
               <div className="p-4 bg-gray-700 flex justify-end items-center">
@@ -261,7 +261,6 @@ const ResultsView = ({
                 ))}
               </select>
             </div>
-            }
           </div>
         )}
 
