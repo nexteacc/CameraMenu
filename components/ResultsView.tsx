@@ -59,20 +59,24 @@ const ResultsView = ({
   const pdfContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setImageLoading(true);
-    setImageError(false);
-    setNumPages(null);
-    setPageNumber(1);
-    setScale(1.0);
+    if (translatedFileUrl) {
+      setImageLoading(true);
+      setImageError(false);
+      setNumPages(null);
+      setPageNumber(1);
+      setScale(1.0);
+    }
   }, [translatedFileUrl]);
 
   function onDocumentLoadSuccess({ numPages: nextNumPages }: { numPages: number }) {
+    console.log('PDF loaded successfully, pages:', nextNumPages);
     setNumPages(nextNumPages);
     setImageLoading(false);
     setImageError(false);
   }
 
-  function onDocumentLoadError() {
+  function onDocumentLoadError(error: Error) {
+    console.error('PDF load error:', error);
     setImageLoading(false);
     setImageError(true);
   }
@@ -173,8 +177,15 @@ const ResultsView = ({
         ) : null}
 
 
-        {translatedFileUrl && !errorMessage && (
+        {!errorMessage && (
           <div className="mb-8 bg-gray-800 rounded-lg overflow-hidden shadow-xl">
+            {!translatedFileUrl && (
+              <div className="p-8 text-center text-gray-400">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
+                <p>Waiting for translation result...</p>
+              </div>
+            )}
+            {translatedFileUrl && (
 
             <div 
               ref={pdfContainerRef} 
@@ -214,6 +225,10 @@ const ResultsView = ({
                   onLoadError={onDocumentLoadError}
                   className="flex justify-center w-full overflow-auto" 
                   loading={<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto my-4"></div>}
+                  options={{
+                    cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
+                    cMapPacked: true,
+                  }}
                 >
                   <Page 
                     pageNumber={pageNumber} 
@@ -246,7 +261,7 @@ const ResultsView = ({
                   </option>
                 ))}
               </select>
-            </div>
+             </div>
           </div>
         )}
 
@@ -284,6 +299,12 @@ const ResultsView = ({
         {translationTask && (
           <div className="mt-6 bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 border border-gray-700">
             <h3 className="text-lg font-semibold mb-3 text-gray-200">翻译任务信息</h3>
+            {translatedFileUrl && (
+              <div className="mb-3 p-2 bg-gray-700 rounded text-xs">
+                <span className="text-gray-400">PDF URL:</span>
+                <div className="text-green-400 break-all mt-1">{translatedFileUrl}</div>
+              </div>
+            )}
             <div className="space-y-2 text-sm">
               <div className="flex justify-between items-center">
                 <span className="text-gray-400">任务ID:</span>

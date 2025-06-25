@@ -376,10 +376,10 @@ export default function Home() {
           <div className="text-center bg-black/40 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-emerald-400 border-r-transparent border-l-transparent mb-6"></div>
             <h2 className="text-2xl font-semibold mb-3 text-white">
-              {translationTask ? getStatusDisplay(translationTask.status) : 'Processing...'}
+              {translationTask ? getStatusDisplay(translationTask.status) : ''}
             </h2>
             <p className="text-emerald-200 text-lg">
-              {translationTask ? `Progress: ${Math.round(translationTask.progress * 100)}%` : 'Preparing...'}
+              {translationTask ? `Progress: ${translationTask.progress}%` : ''}
             </p>
           </div>
         </div>
