@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from "react"; 
+import { useState, useEffect, useRef, useCallback } from "react"; 
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
@@ -44,17 +44,36 @@ const ResultsView = ({
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [pageWidth, setPageWidth] = useState<number>(0);
   
+  // 分离两个不同的 ref
+  const outerContainerRef = useRef<HTMLDivElement>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
+  const isMountedRef = useRef(true); // 组件挂载状态追踪
   
-  // 组件卸载时的全局清理
+  // 组件挂载状态管理
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  // 安全的状态更新函数
+  const safeSetState = useCallback((setter: () => void) => {
+    if (isMountedRef.current) {
+      setter();
+    }
+  }, []);
+
+  // 组件卸载时的全局清理 - 增强版
   useEffect(() => {
     return () => {
       // 清理所有可能的blob URL
       if (pdfBlobUrl) {
         URL.revokeObjectURL(pdfBlobUrl);
       }
+      isMountedRef.current = false;
     };
-  }, []);
+  }, [pdfBlobUrl]);
 
   // 移动端优化的PDF配置选项 - 确保原图质量
   const pdfOptions = {
@@ -68,122 +87,131 @@ const ResultsView = ({
 
   /**
    * 智能计算最佳缩放比例 - 自适应屏幕大小
-   * @param containerWidth 容器宽度
-   * @param pageWidth PDF页面原始宽度
-   * @returns 最佳缩放比例
    */
-  const calculateOptimalScale = (containerWidth: number, pageWidth?: number) => {
+  const calculateOptimalScale = useCallback((containerWidth: number, pageWidth?: number) => {
     if (!pageWidth || containerWidth <= 0) return 1.0;
     
-    // 留出一些边距，避免PDF紧贴屏幕边缘
-    const margin = 32; // 16px * 2
+    const margin = 32;
     const availableWidth = containerWidth - margin;
-    
-    // 计算适合屏幕的缩放比例
     const scale = availableWidth / pageWidth;
     
-    // 限制缩放范围，避免过小或过大
     return Math.min(Math.max(scale, 0.3), 2.0);
-  };
+  }, []);
 
-  // 监听容器尺寸变化
+  // 监听容器尺寸变化 - 修复版
   useEffect(() => {
     const updateContainerWidth = () => {
-      if (pdfContainerRef.current) {
-        const width = pdfContainerRef.current.clientWidth;
-        setContainerWidth(width);
-        const optimalScale = calculateOptimalScale(width);
-        setScale(optimalScale);
+      if (outerContainerRef.current && isMountedRef.current) {
+        const width = outerContainerRef.current.clientWidth;
+        safeSetState(() => {
+          setContainerWidth(width);
+          const optimalScale = calculateOptimalScale(width, pageWidth);
+          setScale(optimalScale);
+        });
       }
     };
 
     updateContainerWidth();
     window.addEventListener('resize', updateContainerWidth);
     
-    return () => window.removeEventListener('resize', updateContainerWidth);
-  }, []);
+    return () => {
+      window.removeEventListener('resize', updateContainerWidth);
+    };
+  }, [pageWidth, calculateOptimalScale, safeSetState]);
 
-  // PDF获取和缓存逻辑 - 修复版本
+  // PDF获取和缓存逻辑 - 防竞态版本
   useEffect(() => {
     if (!translatedFileUrl) return;
 
-    setImageLoading(true);
-    setImageError(false);
-    setNumPages(null);
+    safeSetState(() => {
+      setImageLoading(true);
+      setImageError(false);
+      setNumPages(null);
+    });
 
     let currentBlobUrl: string | null = null;
+    let abortController = new AbortController();
 
-    /**
-     * 获取并缓存PDF文件
-     */
     const fetchAndCachePdf = async () => {
       try {
-        const response = await fetch(translatedFileUrl);
+        const response = await fetch(translatedFileUrl, {
+          signal: abortController.signal
+        });
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const blob = await response.blob();
+        
+        if (abortController.signal.aborted || !isMountedRef.current) {
+          return;
+        }
+        
         const blobUrl = URL.createObjectURL(blob);
         currentBlobUrl = blobUrl;
         
-        setPdfBlobUrl(blobUrl);
+        safeSetState(() => {
+          setPdfBlobUrl(blobUrl);
+        });
         
       } catch (error) {
+        if (error.name === 'AbortError') return;
+        
         console.error("Failed to fetch and cache PDF:", error);
-        setImageError(true);
-        setImageLoading(false);
+        safeSetState(() => {
+          setImageError(true);
+          setImageLoading(false);
+        });
       }
     };
 
     fetchAndCachePdf();
 
-    // 清理函数 - 使用局部变量避免闭包问题
     return () => {
+      abortController.abort();
       if (currentBlobUrl) {
         URL.revokeObjectURL(currentBlobUrl);
       }
     };
-  }, [translatedFileUrl]);
+  }, [translatedFileUrl, safeSetState]);
 
+  // 自适应缩放效果
   useEffect(() => {
-    if (pdfBlobUrl && containerWidth > 0 && pageWidth > 0) {
+    if (pdfBlobUrl && containerWidth > 0 && pageWidth > 0 && isMountedRef.current) {
       const optimalScale = calculateOptimalScale(containerWidth, pageWidth);
       setScale(optimalScale);
     }
-  }, [pdfBlobUrl, containerWidth, pageWidth]);
+  }, [pdfBlobUrl, containerWidth, pageWidth, calculateOptimalScale]);
 
-  /**
-   * PDF文档加载成功回调
-   */
-  function onDocumentLoadSuccess({ numPages: nextNumPages }: { numPages: number }) {
+  // PDF回调函数 - 安全版本
+  const onDocumentLoadSuccess = useCallback(({ numPages: nextNumPages }: { numPages: number }) => {
     console.log('PDF loaded successfully, pages:', nextNumPages);
-    setNumPages(nextNumPages);
-    setImageLoading(false);
-    setImageError(false);
-  }
+    safeSetState(() => {
+      setNumPages(nextNumPages);
+      setImageLoading(false);
+      setImageError(false);
+    });
+  }, [safeSetState]);
 
-  /**
-   * PDF页面加载成功回调 - 获取页面尺寸用于自适应缩放
-   */
-  function onPageLoadSuccess(page: any) {
-    if (page && page.width && !pageWidth) {
+  const onPageLoadSuccess = useCallback((page: any) => {
+    if (page && page.width && !pageWidth && isMountedRef.current) {
       console.log('Page loaded, width:', page.width);
-      setPageWidth(page.width);
+      safeSetState(() => {
+        setPageWidth(page.width);
+      });
     }
-  }
+  }, [pageWidth, safeSetState]);
 
-  /**
-   * PDF文档加载失败回调
-   */
-  function onDocumentLoadError(error: Error) {
+  const onDocumentLoadError = useCallback((error: Error) => {
     console.error('PDF load error:', error);
-    setImageLoading(false);
-    setImageError(true);
-  }
+    safeSetState(() => {
+      setImageLoading(false);
+      setImageError(true);
+    });
+  }, [safeSetState]);
 
-  // 触摸和滚轮缩放支持 - 改进版本
+  // 触摸和滚轮缩放支持 - 修复版本
   useEffect(() => {
     const container = pdfContainerRef.current;
     if (!container) return;
@@ -195,9 +223,11 @@ const ResultsView = ({
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
       const delta = e.deltaY > 0 ? -0.1 : 0.1;
-      setScale(prevScale => {
-        const newScale = prevScale + delta;
-        return Math.min(Math.max(newScale, 0.3), 3.0);
+      safeSetState(() => {
+        setScale(prevScale => {
+          const newScale = prevScale + delta;
+          return Math.min(Math.max(newScale, 0.3), 3.0);
+        });
       });
     };
 
@@ -211,11 +241,7 @@ const ResultsView = ({
           Math.pow(touch2.clientX - touch1.clientX, 2) +
           Math.pow(touch2.clientY - touch1.clientY, 2)
         );
-        // 获取当前实际的scale值
-        setScale(currentScale => {
-          initialScale = currentScale;
-          return currentScale;
-        });
+        initialScale = scale; // 直接使用当前scale值
       }
     };
 
@@ -232,7 +258,9 @@ const ResultsView = ({
         if (initialDistance > 0) {
           const scaleChange = currentDistance / initialDistance;
           const newScale = initialScale * scaleChange;
-          setScale(Math.min(Math.max(newScale, 0.3), 3.0));
+          safeSetState(() => {
+            setScale(Math.min(Math.max(newScale, 0.3), 3.0));
+          });
         }
       }
     };
@@ -245,7 +273,6 @@ const ResultsView = ({
       }
     };
 
-    // 添加事件监听器
     container.addEventListener('wheel', handleWheel, { passive: false });
     container.addEventListener('touchstart', handleTouchStart, { passive: false });
     container.addEventListener('touchmove', handleTouchMove, { passive: false });
@@ -257,13 +284,52 @@ const ResultsView = ({
       container.removeEventListener('touchmove', handleTouchMove);
       container.removeEventListener('touchend', handleTouchEnd);
     };
-  }, []); // 不依赖scale，避免重复绑定
+  }, [scale, safeSetState]);
+
+  // 安全的重新加载函数
+  const handleReload = useCallback(() => {
+    safeSetState(() => {
+      setImageError(false);
+      setImageLoading(true);
+    });
+    
+    // 清理旧的 blob URL
+    if (pdfBlobUrl) {
+      URL.revokeObjectURL(pdfBlobUrl);
+      setPdfBlobUrl(null);
+    }
+    
+    const hardcodedUrl = "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf";
+    
+    const fetchPdf = async () => {
+      try {
+        const response = await fetch(hardcodedUrl);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const blob = await response.blob();
+        
+        if (!isMountedRef.current) return;
+        
+        const blobUrl = URL.createObjectURL(blob);
+        safeSetState(() => {
+          setPdfBlobUrl(blobUrl);
+        });
+      } catch (error) {
+        console.error("Failed to reload PDF:", error);
+        safeSetState(() => {
+          setImageError(true);
+          setImageLoading(false);
+        });
+      }
+    };
+    
+    fetchPdf();
+  }, [pdfBlobUrl, safeSetState]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-6">
       <div className="max-w-4xl mx-auto">
-
-
         {/* 错误信息显示 */}
         {errorMessage && (
           <div className="mb-6 bg-red-900/30 border border-red-500/30 rounded-lg p-4">
@@ -294,13 +360,13 @@ const ResultsView = ({
             )}
             {translatedFileUrl && (
               <div 
-                ref={pdfContainerRef} 
+                ref={outerContainerRef} 
                 className="relative w-full touch-manipulation" 
                 style={{ 
                   touchAction: 'pan-y pinch-zoom',
                   minHeight: '100vh',
-                  overflow: 'auto', // 确保可以滚动查看完整PDF
-                  display: 'block' // 移除flex布局，让PDF自然显示
+                  overflow: 'auto',
+                  display: 'block'
                 }}
               >
                 {imageLoading && (
@@ -317,30 +383,7 @@ const ResultsView = ({
                       </svg>
                       <p>File loading failed</p>
                       <button 
-                        onClick={() => {
-                          setImageError(false);
-                          setImageLoading(true);
-                          // 重新获取PDF，而不是触发整个应用重试
-                          const hardcodedUrl = "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf";
-                          
-                          const fetchPdf = async () => {
-                            try {
-                              const response = await fetch(hardcodedUrl);
-                              if (!response.ok) {
-                                throw new Error(`HTTP error! status: ${response.status}`);
-                              }
-                              const blob = await response.blob();
-                              const blobUrl = URL.createObjectURL(blob);
-                              setPdfBlobUrl(blobUrl);
-                            } catch (error) {
-                              console.error("Failed to reload PDF:", error);
-                              setImageError(true);
-                              setImageLoading(false);
-                            }
-                          };
-                          
-                          fetchPdf();
-                        }}
+                        onClick={handleReload}
                         className="mt-2 text-blue-400 hover:text-blue-300 underline"
                       >
                         Reload
@@ -398,7 +441,7 @@ const ResultsView = ({
                        className="relative overflow-auto" 
                        style={{ 
                          height: '70vh',
-                         touchAction: 'none' // 禁用默认触摸行为，支持自定义缩放
+                         touchAction: 'none'
                        }}
                      >
                       <Document
@@ -414,16 +457,15 @@ const ResultsView = ({
                           disableStream: false,
                         }}
                       >
-                        {/* 渲染所有页面 - 自适应屏幕大小显示 */}
                         {Array.from(new Array(numPages), (el, index) => (
                           <Page 
                             key={`page_${index + 1}`}
                             pageNumber={index + 1} 
                             scale={scale}
-                            onLoadSuccess={index === 0 ? onPageLoadSuccess : undefined} // 只在第一页获取尺寸
+                            onLoadSuccess={index === 0 ? onPageLoadSuccess : undefined}
                             renderTextLayer={false} 
                             renderAnnotationLayer={true}
-                            className="mb-4 shadow-lg mx-auto" // 居中显示
+                            className="mb-4 shadow-lg mx-auto"
                           />
                         ))}
                       </Document>
