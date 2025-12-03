@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface CameraViewProps {
   onCapture: (image: File) => Promise<void>;
@@ -14,6 +14,13 @@ interface CameraViewProps {
  */
 const CameraView = ({ onCapture, onExit, isLoading }: CameraViewProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 组件挂载时自动触发一次相机/文件选择
+  useEffect(() => {
+    if (!isLoading) {
+      fileInputRef.current?.click();
+    }
+  }, [isLoading]);
 
   /**
    * 处理文件选择/拍照完成
@@ -77,7 +84,7 @@ const CameraView = ({ onCapture, onExit, isLoading }: CameraViewProps) => {
 
         {/* 提示文字 */}
         <p className="text-lg text-zinc-600 dark:text-zinc-300 mb-8 text-center px-6">
-          点击下方按钮拍摄菜单照片
+          如果没有自动弹出相机或相册，请点击下方按钮重新选择
         </p>
 
         {/* 拍照按钮 */}
@@ -113,7 +120,7 @@ const CameraView = ({ onCapture, onExit, isLoading }: CameraViewProps) => {
                   d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
                 />
               </svg>
-              <span>拍摄照片</span>
+              <span>选择/拍摄照片</span>
             </>
           )}
         </button>

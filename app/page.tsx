@@ -124,7 +124,7 @@ export default function Home() {
 
           {/* 语言选择器 */}
           <div className="flex flex-col items-center mb-8 w-full max-w-md">
-            <p className="mb-2 text-sm sm:text-base text-black dark:text-white">翻译为:</p>
+            <p className="mb-2 text-sm sm:text-base text-black dark:text-white">To:</p>
             <LanguageSelector 
               selectedLanguage={selectedTargetLanguage} 
               onLanguageChange={handleTargetLanguageChange} 
