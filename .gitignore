@@ -46,3 +46,7 @@ next-env.d.ts
 
 # other
 APIhelp.md
+
+#PWA
+public/sw.js
+public/workbox-*.js
