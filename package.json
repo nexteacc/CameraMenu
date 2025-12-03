@@ -9,9 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/claude-code": "^2.0.57",
     "@clerk/clerk-react": "^5.31.9",
     "@clerk/nextjs": "^6.21.0",
     "@google/genai": "^0.14.0",
+    "@openai/codex": "^0.64.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.17.3",
     "next": "15.2.0",

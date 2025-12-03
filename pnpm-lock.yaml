@@ -12,6 +12,9 @@ importers:
 
   .:
     dependencies:
+      '@anthropic-ai/claude-code':
+        specifier: ^2.0.57
+        version: 2.0.57
       '@clerk/clerk-react':
         specifier: ^5.31.9
         version: 5.31.9(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -21,6 +24,9 @@ importers:
       '@google/genai':
         specifier: ^0.14.0
         version: 0.14.1
+      '@openai/codex':
+        specifier: ^0.64.0
+        version: 0.64.0
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -73,6 +79,11 @@ packages:
   '@alloc/quick-lru@5.2.0':
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
     engines: {node: '>=10'}
+
+  '@anthropic-ai/claude-code@2.0.57':
+    resolution: {integrity: sha512-wxI5KTnNRu7D8PBeM3YmrPSDSMQwIc0ReLPSse0NFfQeh4PJoi1s6juqtccXifzVfidtE839qu1iY+nyqCO3gQ==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
 
   '@clerk/backend@2.0.0':
     resolution: {integrity: sha512-1P4o9L464KVYjkMPaFBKmWo0WpUZsSO+57xjkrKPjW0FOTylYRicKCafoixfRlPMlYWzx7ETmj0ZypmrAZniBA==}
@@ -383,6 +394,11 @@ packages:
   '@nolyfill/is-core-module@1.0.39':
     resolution: {integrity: sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==}
     engines: {node: '>=12.4.0'}
+
+  '@openai/codex@0.64.0':
+    resolution: {integrity: sha512-mO3CJiH9eoQRxRQrlBxht4SM5qYaqjToWxidEFDVa+et1ZdQpt7X3XbNIRdSohorU78E50u864MIwB32Hj3gRQ==}
+    engines: {node: '>=16'}
+    hasBin: true
 
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
@@ -2073,6 +2089,17 @@ snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
 
+  '@anthropic-ai/claude-code@2.0.57':
+    optionalDependencies:
+      '@img/sharp-darwin-arm64': 0.33.5
+      '@img/sharp-darwin-x64': 0.33.5
+      '@img/sharp-linux-arm': 0.33.5
+      '@img/sharp-linux-arm64': 0.33.5
+      '@img/sharp-linux-x64': 0.33.5
+      '@img/sharp-linuxmusl-arm64': 0.33.5
+      '@img/sharp-linuxmusl-x64': 0.33.5
+      '@img/sharp-win32-x64': 0.33.5
+
   '@clerk/backend@2.0.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
     dependencies:
       '@clerk/shared': 3.9.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -2360,6 +2387,8 @@ snapshots:
       fastq: 1.19.1
 
   '@nolyfill/is-core-module@1.0.39': {}
+
+  '@openai/codex@0.64.0': {}
 
   '@pkgjs/parseargs@0.11.0':
     optional: true

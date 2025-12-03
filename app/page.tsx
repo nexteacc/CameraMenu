@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, SignedIn, SignedOut, UserButton, SignInButton } from '@clerk/nextjs';
 import CameraView from '../components/CameraView';
 import ResultsView from '../components/ResultsView';
 import LanguageSelector from '../components/LanguageSelector';
@@ -193,7 +193,28 @@ export default function Home() {
     <AuroraBackground className="text-white">
       {/* 首页 - 语言选择和启动相机 */}
       {appState === 'idle' && (
-        <div className="flex flex-col items-center justify-center min-h-screen p-6 text-center">
+        <div className="flex flex-col items-center justify-center min-h-screen p-6 text-center relative">
+          {/* 右上角登录/用户按钮 */}
+          <div className="absolute top-4 right-4">
+            <SignedIn>
+              <UserButton 
+                afterSignOutUrl="/"
+                appearance={{
+                  elements: {
+                    avatarBox: "w-10 h-10"
+                  }
+                }}
+              />
+            </SignedIn>
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button className="px-4 py-2 text-sm bg-zinc-800 hover:bg-zinc-700 text-white rounded-full transition-colors">
+                  Log in
+                </button>
+              </SignInButton>
+            </SignedOut>
+          </div>
+          
           <h1 className="text-4xl font-bold mb-6 text-black dark:text-white">CameraMenu</h1>
           <div className="text-xl mb-8 max-w-md text-black dark:text-white text-left">
             <p>Travel, Scan Any Menu</p>
@@ -205,14 +226,14 @@ export default function Home() {
             <LanguageSelector 
               selectedLanguage={selectedTargetLanguage} 
               onLanguageChange={handleTargetLanguageChange} 
-              className="w-full text-base md:text-lg"
+              className="w-1/2 text-base md:text-lg"
             />
           </div>
           
           {/* 启动相机按钮 */}
           <button
             onClick={handleCameraStart}
-            className="px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-xl font-semibold transition-colors flex items-center"
+            className="px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-2xl text-xl font-semibold transition-colors flex items-center"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
