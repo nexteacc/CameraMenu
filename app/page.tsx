@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth, SignedIn, SignedOut, UserButton, SignInButton } from '@clerk/nextjs';
+import { useAuth, UserButton } from '@clerk/nextjs';
 import CameraView from '../components/CameraView';
 import ResultsView from '../components/ResultsView';
 import LanguageSelector from '../components/LanguageSelector';
@@ -194,69 +194,60 @@ export default function Home() {
       {/* 首页 - 语言选择和启动相机 */}
       {appState === 'idle' && (
         <div className="flex flex-col items-center justify-center min-h-screen p-6 text-center relative">
-          {/* 右上角登录/用户按钮 */}
+          {/* 右上角用户按钮 */}
           <div className="absolute top-4 right-4">
-            <SignedIn>
-              <UserButton 
-                afterSignOutUrl="/"
-                appearance={{
-                  elements: {
-                    avatarBox: "w-10 h-10"
-                  }
-                }}
-              />
-            </SignedIn>
-            <SignedOut>
-              <SignInButton mode="modal">
-                <button className="px-4 py-2 text-sm bg-zinc-800 hover:bg-zinc-700 text-white rounded-full transition-colors">
-                  Log in
-                </button>
-              </SignInButton>
-            </SignedOut>
-          </div>
-          
-          <h1 className="text-4xl font-bold mb-6 text-black dark:text-white">CameraMenu</h1>
-          <div className="text-xl mb-8 max-w-md text-black dark:text-white text-left">
-            <p>Travel, Scan Any Menu</p>
-          </div>
-
-          {/* 语言选择器 */}
-          <div className="flex flex-col items-center mb-8 w-full max-w-md">
-            <p className="mb-2 text-sm sm:text-base text-black dark:text-white">To:</p>
-            <LanguageSelector 
-              selectedLanguage={selectedTargetLanguage} 
-              onLanguageChange={handleTargetLanguageChange} 
-              className="w-1/2 text-base md:text-lg"
+            <UserButton 
+              afterSignOutUrl="/sign-in"
+              appearance={{
+                elements: {
+                  avatarBox: "w-10 h-10"
+                }
+              }}
             />
           </div>
           
-          {/* 启动相机按钮 */}
-          <button
-            onClick={handleCameraStart}
-            className="px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-2xl text-xl font-semibold transition-colors flex items-center"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+          <h1 className="text-4xl font-bold mb-12 text-black dark:text-white">CameraMenu</h1>
+
+          {/* 语言选择器和相机按钮 - 垂直居中对齐 */}
+          <div className="flex flex-col items-center gap-6 w-full max-w-md">
+            {/* 语言选择器 */}
+            <div className="flex flex-col items-center w-full">
+              <p className="mb-2 text-sm text-black dark:text-white">To:</p>
+              <LanguageSelector 
+                selectedLanguage={selectedTargetLanguage} 
+                onLanguageChange={handleTargetLanguageChange} 
+                className="w-full max-w-xs"
+              />
+            </div>
+            
+            {/* 启动相机按钮 */}
+            <button
+              onClick={handleCameraStart}
+              className="w-16 h-16 bg-blue-600 hover:bg-blue-700 rounded-full transition-all hover:scale-105 flex items-center justify-center shadow-lg"
+              aria-label="Start Camera"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-            </svg>
-            Start Camera
-          </button>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-8 w-8 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
       )}
       
