@@ -84,7 +84,7 @@ const CameraView = ({ onCapture, onExit, isLoading }: CameraViewProps) => {
 
         {/* 提示文字 */}
         <p className="text-lg text-zinc-600 dark:text-zinc-300 mb-8 text-center px-6">
-          如果没有自动弹出相机或相册，请点击下方按钮重新选择
+          If not prompted, tap below to retry.
         </p>
 
         {/* 拍照按钮 */}
@@ -96,7 +96,7 @@ const CameraView = ({ onCapture, onExit, isLoading }: CameraViewProps) => {
           {isLoading ? (
             <>
               <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
-              <span>处理中...</span>
+              <span>Processing...</span>
             </>
           ) : (
             <>
@@ -120,15 +120,11 @@ const CameraView = ({ onCapture, onExit, isLoading }: CameraViewProps) => {
                   d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
                 />
               </svg>
-              <span>选择/拍摄照片</span>
+              <span>Select/Take Photo</span>
             </>
           )}
         </button>
-
-        {/* 或者从相册选择 */}
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-4">
-          移动端将自动打开相机
-        </p>
+    
       </div>
 
       {/* 返回按钮 */}
@@ -151,7 +147,7 @@ const CameraView = ({ onCapture, onExit, isLoading }: CameraViewProps) => {
             d="M10 19l-7-7m0 0l7-7m-7 7h18"
           />
         </svg>
-        <span>返回</span>
+     
       </button>
     </div>
   );

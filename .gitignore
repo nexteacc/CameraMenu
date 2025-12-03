@@ -2,7 +2,7 @@
 
 .env.local
 .env
-
+.claude/*
 
 # dependencies
 /node_modules

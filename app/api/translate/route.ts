@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return setCORSHeaders(
         NextResponse.json(
-          { success: false, error: '缺少或无效的授权头' },
+          { success: false, error: 'Missing or invalid authorization header' },
           { status: 401 }
         )
       );
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     if (!image || !toLang) {
       return setCORSHeaders(
         NextResponse.json(
-          { success: false, error: '缺少必需参数: image, toLang' },
+          { success: false, error: 'Missing required parameters: image, toLang' },
           { status: 400 }
         )
       );
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     if (!image.type.startsWith('image/')) {
       return setCORSHeaders(
         NextResponse.json(
-          { success: false, error: '无效的图片类型' },
+          { success: false, error: 'Invalid image type' },
           { status: 400 }
         )
       );
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
       console.error('GEMINI_API_KEY 环境变量未设置');
       return setCORSHeaders(
         NextResponse.json(
-          { success: false, error: '服务器配置错误：缺少 API 密钥' },
+          { success: false, error: 'Server configuration error: Missing API key' },
           { status: 500 }
         )
       );
@@ -100,24 +100,24 @@ export async function POST(request: NextRequest) {
     console.log('图片处理完成，大小:', imageBuffer.byteLength, 'bytes');
 
     // 构建翻译提示词
-    const prompt = `你是一个专业的菜单翻译助手。
+    const prompt = `You are a professional menu translation assistant.
 
-## 任务
-为这张菜单添加 ${toLang} 翻译注释。
+## Task
+Add ${toLang} translation annotations to this menu.
 
-## 翻译风格
-- 保留原文，翻译放在原文段落的下方或旁边，根据布局判断
-- 手绘彩笔风格，清晰但不过度遮挡原图
-- 颜色根据背景自动选择对比色
-- 翻译文字略小于原文，清晰可读
+## Translation Style
+- Keep the original text, place translations below or beside the original paragraphs based on layout
+- Hand-drawn marker style, clear but not overly blocking the original image
+- Colors automatically selected for contrast based on background
+- Translation text slightly smaller than original, clear and readable
 
-## 翻译要求
-- 翻译简洁地道
-- 只翻译菜单内容（菜名、配菜、套餐等）
-- 价格数字保持不变
-- 专有名词转换为目标语言中合适的表达
+## Translation Requirements
+- Translate concisely and naturally
+- Only translate menu content (dish names, sides, set meals, etc.)
+- Keep price numbers unchanged
+- Convert proper nouns to appropriate expressions in the target language
 
-请生成翻译后的图片。`;
+Please generate the translated image.`;
 
     console.log('正在调用 Gemini API...');
 
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
     if (!candidates || candidates.length === 0) {
       return setCORSHeaders(
         NextResponse.json(
-          { success: false, error: '未获取到翻译结果' },
+          { success: false, error: 'Failed to get translation result' },
           { status: 500 }
         )
       );
@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
     if (!content || !content.parts) {
       return setCORSHeaders(
         NextResponse.json(
-          { success: false, error: '响应内容格式错误' },
+          { success: false, error: 'Invalid response format' },
           { status: 500 }
         )
       );
@@ -192,7 +192,7 @@ export async function POST(request: NextRequest) {
         NextResponse.json(
           { 
             success: false, 
-            error: '无法生成翻译图片。模型响应: ' + (textResponse || '无文字响应'),
+            error: 'Failed to generate translated image. Model response: ' + (textResponse || 'No text response'),
             textResponse 
           },
           { status: 500 }
@@ -214,7 +214,7 @@ export async function POST(request: NextRequest) {
     console.error('翻译处理错误:', error);
 
     // 处理特定错误类型
-    let errorMessage = '翻译处理失败';
+    let errorMessage = 'Translation processing failed';
     let statusCode = 500;
 
     if (error instanceof Error) {
@@ -222,12 +222,12 @@ export async function POST(request: NextRequest) {
       
       // 检查是否是 API 限流错误
       if (error.message.includes('429') || error.message.includes('rate limit')) {
-        errorMessage = 'API 请求过于频繁，请稍后再试';
+        errorMessage = 'API request rate limit exceeded, please try again later';
         statusCode = 429;
       }
       // 检查是否是认证错误
       else if (error.message.includes('401') || error.message.includes('API key')) {
-        errorMessage = 'API 认证失败，请检查配置';
+        errorMessage = 'API authentication failed, please check configuration';
         statusCode = 401;
       }
     }

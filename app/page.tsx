@@ -37,27 +37,104 @@ export default function Home() {
   };
 
   /**
+   * 压缩图片
+   * @param file 原始图片文件
+   * @param maxWidth 最大宽度（默认 1920px）
+   * @param quality 压缩质量（0-1，默认 0.8）
+   * @returns 压缩后的 File 对象
+   */
+  const compressImage = async (
+    file: File,
+    maxWidth: number = 1920,
+    quality: number = 0.8
+  ): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+
+      img.onload = () => {
+        // 清理 URL 对象
+        URL.revokeObjectURL(objectUrl);
+
+        // 计算缩放比例
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+
+        // 创建 canvas 进行压缩
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Failed to create canvas context'));
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // 转换为 Blob
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              reject(new Error('Image compression failed'));
+              return;
+            }
+
+            // 创建新的 File 对象
+            const compressedFile = new File([blob], file.name, {
+              type: 'image/jpeg',
+              lastModified: Date.now(),
+            });
+
+            console.log(`图片压缩完成: ${(file.size / 1024).toFixed(1)}KB → ${(compressedFile.size / 1024).toFixed(1)}KB (${((1 - compressedFile.size / file.size) * 100).toFixed(1)}% 减少)`);
+
+            resolve(compressedFile);
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('Failed to load image'));
+      };
+      img.src = objectUrl;
+    });
+  };
+
+  /**
    * 处理拍照/选择图片
    */
   const handleCapture = async (imageFile: File) => {
     try {
-      // 保存图片用于重试
+      // 保存原始图片用于重试
       setLastCapturedImage(imageFile);
       setErrorMessage('');
       setAppState('processing');
-      
-      // 获取认证 token
-      const token = await getToken();
-      
-      // 构建请求数据
+
+      // 并行执行：获取 token + 压缩图片
+      const [token, compressedImage] = await Promise.all([
+        getToken(),
+        compressImage(imageFile, 1920, 0.8),
+      ]);
+
+      // 构建请求数据（使用压缩后的图片）
       const formData = new FormData();
-      formData.append('image', imageFile);
+      formData.append('image', compressedImage);
       formData.append('toLang', selectedTargetLanguage);
 
       console.log('发送翻译请求:', {
         toLang: selectedTargetLanguage,
-        imageSize: imageFile.size,
-        imageType: imageFile.type,
+        originalSize: `${(imageFile.size / 1024).toFixed(1)}KB`,
+        compressedSize: `${(compressedImage.size / 1024).toFixed(1)}KB`,
+        imageType: compressedImage.type,
       });
 
       // 调用翻译 API
@@ -72,7 +149,7 @@ export default function Home() {
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        throw new Error(result.error || '翻译失败');
+        throw new Error(result.error || 'Translation failed');
       }
 
       // 设置翻译结果
@@ -82,7 +159,7 @@ export default function Home() {
       
     } catch (error) {
       console.error('翻译处理错误:', error);
-      setErrorMessage((error as Error).message || '处理图片时发生错误');
+      setErrorMessage((error as Error).message || 'Error processing image');
       setAppState('results');
     }
   };
@@ -176,13 +253,10 @@ export default function Home() {
           <div className="text-center bg-black/40 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-emerald-400 border-r-transparent border-l-transparent mb-6"></div>
             <h2 className="text-2xl font-semibold mb-3 text-white">
-              正在翻译菜单...
+              Translating...
             </h2>
-            <p className="text-emerald-200 text-lg">
-              AI 正在识别并翻译图片中的文字
-            </p>
             <p className="text-zinc-400 text-sm mt-4">
-              这可能需要几秒钟，请稍候
+              Please wait...
             </p>
           </div>
         </div>
