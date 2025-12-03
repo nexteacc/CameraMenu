@@ -114,7 +114,7 @@ Identify all food items in this image and add ${toLang} labels.
 
 ## Requirements
 - Only label food items (fruits, vegetables, dishes, ingredients, snacks, drinks, etc.)
-- Keep labels concise (1-3 words)
+- Keep labels concise 
 - Do not label non-food items (plates, utensils, tables, etc.)
 - Do not overlap labels with each other
 - If the same type of food appears multiple times, label it only once

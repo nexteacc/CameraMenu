@@ -29,7 +29,7 @@ const CameraView = ({ onCapture, onExit, isLoading }: CameraViewProps) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-zinc-50 dark:bg-zinc-900">
+    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-white dark:bg-zinc-800">
       {/* 隐藏的文件输入 */}
       <input
         ref={cameraInputRef}
@@ -54,8 +54,8 @@ const CameraView = ({ onCapture, onExit, isLoading }: CameraViewProps) => {
         {isLoading ? (
           // 加载状态
           <div className="flex flex-col items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500 mb-4"></div>
-            <p className="text-zinc-600 dark:text-zinc-300">Processing...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-600 mb-4"></div>
+            <p className="text-zinc-500">Processing...</p>
           </div>
         ) : (
           <>
@@ -63,7 +63,7 @@ const CameraView = ({ onCapture, onExit, isLoading }: CameraViewProps) => {
             <div className="mb-12">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-20 w-20 text-blue-500 dark:text-blue-400"
+                className="h-20 w-20 text-blue-600"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -89,7 +89,7 @@ const CameraView = ({ onCapture, onExit, isLoading }: CameraViewProps) => {
               <button
                 onClick={() => cameraInputRef.current?.click()}
                 disabled={isLoading}
-                className="w-16 h-16 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-full transition-all hover:scale-105 flex items-center justify-center shadow-lg disabled:cursor-not-allowed"
+                className="w-16 h-16 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-full transition-all hover:scale-105 flex items-center justify-center shadow-lg disabled:cursor-not-allowed"
                 aria-label="Take Photo"
               >
                 <svg
@@ -118,7 +118,7 @@ const CameraView = ({ onCapture, onExit, isLoading }: CameraViewProps) => {
               <button
                 onClick={() => galleryInputRef.current?.click()}
                 disabled={isLoading}
-                className="w-16 h-16 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 rounded-full transition-all hover:scale-105 flex items-center justify-center shadow-lg disabled:cursor-not-allowed"
+                className="w-16 h-16 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-full transition-all hover:scale-105 flex items-center justify-center shadow-lg disabled:cursor-not-allowed"
                 aria-label="Choose from Gallery"
               >
                 <svg
@@ -145,12 +145,12 @@ const CameraView = ({ onCapture, onExit, isLoading }: CameraViewProps) => {
       <button
         onClick={onExit}
         disabled={isLoading}
-        className="mt-8 w-12 h-12 bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+        className="mt-8 w-12 h-12 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-200/80 dark:hover:bg-zinc-800/80 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
         aria-label="Back"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6 text-zinc-700 dark:text-zinc-200"
+          className="h-6 w-6 text-zinc-800 dark:text-white"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"

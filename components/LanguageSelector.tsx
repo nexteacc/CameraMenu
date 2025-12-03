@@ -56,14 +56,14 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
 
   return (
     <div className={className}> 
-      {label && <label htmlFor={label.replace(/\s+/g, '-').toLowerCase()} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>}
+      {label && <label htmlFor={label.replace(/\s+/g, '-').toLowerCase()} className="block text-sm font-medium text-zinc-800 dark:text-white mb-1">{label}</label>}
       <select
         id={label ? label.replace(/\s+/g, '-').toLowerCase() : undefined}
         value={selectedLanguage}
         onChange={handleSelectionChange}
         disabled={disabled || loading}
 
-        className={`capitalize min-w-[150px] sm:min-w-[200px] w-full py-3 px-4 border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 ${className}`}
+        className={`capitalize min-w-[150px] sm:min-w-[200px] w-full py-3 px-4 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 text-black dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 disabled:opacity-50 ${className}`}
         aria-label={label || "Language selection"}
       >
         {loading && <option value="" disabled>Loading...</option>} 
@@ -72,7 +72,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
             key={language.code} 
             value={language.name}
 
-            className="text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-800"
+            className="text-black dark:text-white bg-white dark:bg-zinc-800"
           > 
             {language.name}
           </option>
@@ -81,7 +81,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
       
       {error && (
         <div 
-          className="text-red-500 text-xs mt-1"
+          className="text-red-600 text-xs mt-1"
           role="alert"
           aria-live="polite"
         >

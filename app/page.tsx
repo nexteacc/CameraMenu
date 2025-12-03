@@ -308,7 +308,7 @@ export default function Home() {
             <p className="text-lg text-black dark:text-white mb-2">
               {mode === 'translate' ? 'Translate Menu' : 'Recognize Food'}
             </p>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="text-sm text-zinc-500">
               {mode === 'translate' 
                 ? `Translate to ${selectedTargetLanguage}` 
                 : `Label in ${selectedTargetLanguage}`}
@@ -371,12 +371,12 @@ export default function Home() {
           {/* 返回按钮 */}
           <button
             onClick={handleBackToIdle}
-            className="mt-12 w-12 h-12 bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 rounded-full transition-colors flex items-center justify-center"
+            className="mt-12 w-12 h-12 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-200/80 dark:hover:bg-zinc-800/80 rounded-full transition-colors flex items-center justify-center"
             aria-label="Back"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-zinc-700 dark:text-zinc-200"
+              className="h-6 w-6 text-zinc-800 dark:text-white"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -396,11 +396,11 @@ export default function Home() {
       {appState === 'processing' && (
         <div className="flex flex-col items-center justify-center min-h-screen p-6">
           <div className="text-center bg-black/40 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-emerald-400 border-r-transparent border-l-transparent mb-6"></div>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-emerald-600 border-r-transparent border-l-transparent mb-6"></div>
             <h2 className="text-2xl font-semibold mb-3 text-white">
               {mode === 'translate' ? 'Translating...' : 'Recognizing...'}
             </h2>
-            <p className="text-zinc-400 text-sm mt-4">
+            <p className="text-zinc-500 text-sm mt-4">
               Please wait...
             </p>
           </div>

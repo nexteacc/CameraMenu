@@ -67,7 +67,7 @@ const ResultsView = ({
         {/* 左上角返回按钮 */}
         <button
           onClick={onBack}
-          className="mb-4 p-2.5 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+          className="mb-4 p-2.5 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
           aria-label="Back"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,19 +77,19 @@ const ResultsView = ({
 
         {/* 错误信息 */}
         {errorMessage && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
+          <div className="mb-6 p-4 bg-red-600/10 dark:bg-red-600/20 border border-red-600/20 rounded-lg">
             <div className="flex items-start space-x-3">
-              <svg className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div className="flex-1">
-                <h3 className="text-red-800 dark:text-red-200 font-medium">Failed</h3>
-                <p className="text-red-700 dark:text-red-300 text-sm mt-1">{errorMessage}</p>
+                <h3 className="text-red-600 font-medium">Failed</h3>
+                <p className="text-red-600/80 text-sm mt-1">{errorMessage}</p>
               </div>
             </div>
             <button
               onClick={onRetry}
-              className="mt-4 w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
+              className="mt-4 w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-600/90 transition-colors flex items-center justify-center space-x-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -108,7 +108,7 @@ const ResultsView = ({
                 <img
                   src={translatedImageUrl}
                   alt="Translation result"
-                  className="max-w-full h-auto rounded-lg shadow-sm border border-gray-200 dark:border-zinc-700"
+                  className="max-w-full h-auto rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800"
                   style={{ maxHeight: '65vh' }}
                   onError={(e) => {
                     console.error('Image load failed');
@@ -123,7 +123,7 @@ const ResultsView = ({
                 {canShare && (
                   <button
                     onClick={handleShare}
-                    className="p-2.5 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors shadow-lg"
+                    className="p-2.5 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition-colors shadow-lg"
                     aria-label="Share"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,7 +146,7 @@ const ResultsView = ({
             </div>
 
             {/* 底部操作区 */}
-            <div className="p-4 border-t border-gray-100 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900">
+            <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800">
               <div className="flex flex-col gap-3">
                 <button
                   onClick={onRetake}
@@ -161,7 +161,7 @@ const ResultsView = ({
 
                 <button
                   onClick={onRetry}
-                  className="w-full px-4 py-3 bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-lg hover:bg-zinc-300 dark:hover:bg-zinc-600 transition-colors flex items-center justify-center space-x-2"
+                  className="w-full px-4 py-3 bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-white rounded-lg hover:bg-zinc-200/80 dark:hover:bg-zinc-800/80 transition-colors flex items-center justify-center space-x-2"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -176,10 +176,10 @@ const ResultsView = ({
         {/* 无结果时的空状态 */}
         {!translatedImageUrl && !errorMessage && (
           <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-lg p-8 text-center">
-            <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-16 h-16 mx-auto text-zinc-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <p className="text-gray-500 dark:text-gray-400">No result</p>
+            <p className="text-zinc-500">No result</p>
             <button
               onClick={onRetake}
               className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
