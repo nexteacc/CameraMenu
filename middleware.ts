@@ -3,9 +3,8 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 // 定义公开路由（不需要登录就能访问的路由）
 // 这里我们不设置任何公开路由，所有页面都需要登录
 const isPublicRoute = createRouteMatcher([
-  // 如果需要某些路由公开，可以在这里添加，比如：
-  // '/about(.*)',
-  // '/pricing(.*)',
+  '/sign-in(.*)',
+  '/sign-up(.*)',
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
