@@ -1,6 +1,5 @@
 # CameraMenu - Menu Translation App
 
-
 [🇨🇳 简体中文](README.zh.md) | [🇺🇸 English](README.md)
 
 ---
@@ -12,82 +11,72 @@ This is a modern web application built with Next.js (App Router) that allows use
 The project uses Next.js App Router architecture with the following main files and directory structure:
 
 - `/app` - Contains the main application pages, API routes, and layouts.
-  - `/app/api` - Backend API endpoints, including image upload (`/upload`) and task status queries (`/task/[taskId]`).
+  - `/app/api/translate` - Backend API endpoint for image translation using Google Gemini API.
   - `/app/page.tsx` - Main application page handling camera interactions, state management, and API calls.
   - `/app/layout.tsx` - Root application layout.
-  - `/components` - Contains reusable UI components.
-    - `CameraView.tsx` - Camera preview and photo capture component.
-    - `ResultsView.tsx` - Component for displaying translation results (PDF format) with gesture zoom support.
-    - `LanguageSelector.tsx` - Language selection component.
-    - `CameraButton.tsx` - Camera activation button.
-    - `AuroraBackground.tsx` - Beautiful background component.
-  - `/lib` - Contains utility functions (e.g., `utils.ts`).
-  - `/public` - Contains static assets (e.g., `pdf.worker.min.js` if hosted locally).
+- `/components` - Contains reusable UI components.
+  - `CameraView.tsx` - Camera capture component using native system camera (input capture).
+  - `ResultsView.tsx` - Component for displaying translation results (image format) with download and share support.
+  - `LanguageSelector.tsx` - Language selection component.
+  - `AuroraBackground.tsx` - Beautiful animated background component.
+- `/lib` - Contains utility functions (e.g., `utils.ts`).
 
 ## Core Features
 
 1. **User Authentication**: Uses Clerk for user authentication to protect API endpoints.
-2. **Camera Photography**: Accesses device camera through browser's MediaDevices API to capture menu photos.
-3. **Image Upload & Translation Task Creation**: Uploads captured menu photos and target language to backend `/api/upload` endpoint, which calls third-party services for OCR and translation, returning a task ID.
-4. **Asynchronous Task Polling & Result Retrieval**: Frontend polls `/api/task/[taskId]` endpoint to get translation task status and final translation result URL (PDF format).
-5. **PDF Result Display & Interaction**: Uses `react-pdf` in `ResultsView.tsx` component to display translated PDF files with pinch-to-zoom support on mobile devices.
-6. **Dual Language Selection Support**: Users can select source and target translation languages with multi-language support.
+2. **Native Camera Access**: Uses HTML input capture to access system camera on mobile devices or file picker on desktop.
+3. **AI-Powered Translation**: Uses Google Gemini API (`gemini-3-pro-image-preview`) to translate menu text directly on the image.
+4. **Synchronous Processing**: Translation is processed synchronously - no polling required.
+5. **Image Result Display**: Displays translated images directly (Base64 format) with download and share functionality.
+6. **Target Language Selection**: Users can select target translation language with support for 12 languages. Source language is automatically detected by AI.
 
 ## Workflow
 
 1. User logs into the application through Clerk.
-2. On the main page (`page.tsx`), user selects source and target translation languages.
-3. User clicks the photo button to activate `CameraView.tsx`.
-4. User captures menu photo and confirms.
-5. The `handleCapture` function in `page.tsx` uploads image data (Blob), source language, and target language via FormData to `/api/upload`.
-6. `/api/upload` (in `app/api/upload/route.ts`) receives the request, performs token validation, then calls third-party translation service to create translation task, returning `taskId` and `status`.
-7. After receiving `taskId`, `page.tsx` starts the `pollTranslationResult` function, which periodically calls `/api/task/[taskId]`.
-8. `/api/task/[taskId]` (in `app/api/task/[taskId]/route.ts`) queries third-party service task status and results.
-9. Polling continues until task completion (`status === 'Completed'`) and `translatedFileUrl` (PDF link) is obtained, or task fails.
-10. `page.tsx` updates state and passes `translatedFileUrl` and other relevant information to `ResultsView.tsx`.
-11. `ResultsView.tsx` uses `react-pdf` to load and display PDF, allowing users to zoom via gestures or scroll wheel.
-12. Users can retake photos, go back, or retry operations.
+2. On the main page (`page.tsx`), user selects target translation language.
+3. User clicks the "Start Camera" button to activate `CameraView.tsx`.
+4. User captures menu photo using system camera (mobile) or selects image file (desktop).
+5. The `handleCapture` function in `page.tsx` uploads image file and target language via FormData to `/api/translate`.
+6. `/api/translate` (in `app/api/translate/route.ts`) receives the request, performs token validation, then calls Google Gemini API to translate the menu.
+7. Gemini API processes the image and returns a new image with translated text overlaid in handwritten style.
+8. The translated image (Base64 format) is returned to the frontend.
+9. `page.tsx` updates state and passes the translated image URL to `ResultsView.tsx`.
+10. `ResultsView.tsx` displays the translated image, allowing users to download or share it.
+11. Users can retake photos, go back, or retry translation.
 
 ## Data Flow Details
 
-### 📸 Image Data Flow Path
+### 📸 Image Translation Flow
 
 1. **Camera Capture Stage**:
-   - `CameraView.tsx` → Canvas drawing → `canvas.toBlob()` → JPEG format Blob object
+   - `CameraView.tsx` → System camera (mobile) or file picker (desktop) → File object
 
 2. **Frontend Upload Stage**:
-   - `page.tsx` → Create FormData → Add image(Blob), fromLang, toLang, userId → `fetch('/api/upload')`
+   - `page.tsx` → Create FormData → Add image(File), toLang → `fetch('/api/translate')`
 
-3. **Backend Forwarding Stage**:
-   - `route.ts` → Receive FormData → Create new FormData  → Forward to third-party API
-   - **Format**: `multipart/form-data` (meets API requirements)
+3. **Backend Processing Stage**:
+   - `/api/translate` → Receive FormData → Convert image to Base64
+   - Build prompt with translation requirements
+   - Call Google Gemini API with image and prompt
 
-
-4. **API Response Stage**:
-   - Third-party API → Return taskId → Frontend starts polling → Finally get `translatedFileUrl` (PDF document link)
+4. **AI Translation Stage**:
+   - Google Gemini API → Process image → Generate new image with translated text
+   - Return Base64 image data
 
 5. **Result Display Stage**:
-   - `ResultsView.tsx` → Use `react-pdf` to render PDF → Support zoom and interaction
+   - `ResultsView.tsx` → Display Base64 image → Support download and share
 
 ## Data Flow & State Management
 
-- **Main State Management**: Uses `useState` in `app/page.tsx` to manage core application state, including camera activation status, captured images, source language, target language, task ID, task status, translation progress, translation result URL, and error information.
-- **Translation Status Types**: Defines `TranslationStatus` type with the following states:
-  - `Analyzing` - Initial analysis stage
-  - `Waiting` - Queued and waiting
-  - `Processing` - Currently translating
-  - `Completed` - Translation completed
-  - `Terminated` - Translation failed/terminated
-  - `NotSupported` - Unsupported content
+- **Main State Management**: Uses `useState` in `app/page.tsx` to manage core application state, including camera activation status, captured images, target language, translated image URL, and error information.
 - **Token Retrieval**: Uses `useAuth` (Clerk) to get user session token for API request authentication.
 - **API Communication**:
-  - Image upload: `POST /api/upload` (FormData)
-  - Result polling: `GET /api/task/[taskId]`
+  - Image translation: `POST /api/translate` (FormData)
 - **Props Passing**: State and callback functions are passed via props from `page.tsx` to child components like `CameraView.tsx` and `ResultsView.tsx`.
 
 ## API Interface Documentation
 
-### 1. `/api/upload`
+### `/api/translate`
 
 - **Method**: `POST`
 - **Content-Type**: `multipart/form-data`
@@ -95,35 +84,16 @@ The project uses Next.js App Router architecture with the following main files a
 - **Request Body Parameters**:
   - `image`: (File) Captured image file.
   - `toLang`: (String) Target translation language name (e.g., "English", "Vietnamese", "Simplified Chinese", "Thai", "Korean").
-  - `fromLang`: (String) Source language name (required parameter).
-  - `userId`: (String) User ID (required parameter).
-- **Internal Processing**: Backend directly forwards FormData to third-party API
+- **Internal Processing**: Backend calls Google Gemini API to translate menu text on the image
 - **Success Response (200 OK)**:
   ```json
   {
-    "taskId": "some-task-id",
-    "status": "Pending" // or other initial status
+    "success": true,
+    "imageDataUrl": "data:image/png;base64,...",
+    "textResponse": "Optional text response from AI"
   }
   ```
 - **Error Response**: Standard HTTP error codes (e.g., 400, 401, 500) with error messages.
-
-### 2. `/api/task/[taskId]`
-
-- **Method**: `GET`
-- **Authentication**: Requires Clerk Session Token (Bearer Token in Authorization header)
-- **Path Parameters**:
-  - `taskId`: (String) Task ID returned by `/api/upload`.
-- **Success Response (200 OK)**:
-  ```json
-  {
-    "taskId": "some-task-id",
-    "status": "Completed", // "Processing", "Failed", etc.
-    "progress": 100,
-    "translatedFileUrl": "url-to-translated-pdf.pdf", // appears when status is Completed
-    "error": null // or error message string
-  }
-  ```
-- **Error Response**: Standard HTTP error codes (e.g., 401, 404, 500) with error messages.
 
 ## Development & Running
 
@@ -147,8 +117,7 @@ The project requires the following environment variables (usually configured in 
 
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`: Clerk's publishable key.
 - `CLERK_SECRET_KEY`: Clerk's secret key (for backend validation).
-- `TRANSLATION_API_KEY`: Third-party translation service API key.
-- `TRANSLATION_API_URL`: Third-party translation service API URL.
+- `GEMINI_API_KEY`: Google Gemini API key (get from [Google AI Studio](https://aistudio.google.com/)).
 
 ## Current Status
 
@@ -156,28 +125,16 @@ The project requires the following environment variables (usually configured in 
 
 ✅ Pitch design completed https://cameramenu.typedream.app/
 
-✅ Project goals clearly defined
-
-❌ Backend translation service integration still has issues and hasn't been fully connected. I'm still investigating where the problem lies.
+✅ Menu translation feature implemented using Google Gemini API
 
 ✅ MVP is a PWA application
 
-
-
-
-## Team Building
-🎨 I need a partner to redesign the UI and user experience.
-
-💻 I need a partner to develop the backend code.
-
 ## Future Plans
 
-🟢1. Optimize frontend UI, improve user login functionality, and enhance user interaction flow.
+🟢 1. Optimize frontend UI, improve user login functionality, and enhance user interaction flow.
 
-🟢2. Allergen Alerts: Write code to call OpenAI API to analyze user-uploaded images for allergens and alert users.
+🟢 2. Allergen Alerts: Write code to call OpenAI API to analyze user-uploaded images for allergens and alert users.
 
-🟢3. Long Image Sharing: Add functionality to generate long images combining translation results and allergen alert information for easy user saving and sharing.
+🟢 3. Long Image Sharing: Add functionality to generate long images combining translation results and allergen alert information for easy user saving and sharing.
 
-🟢4. Launch in Apple store and Google store
-
-
+🟢 4. Launch in Apple store and Google store

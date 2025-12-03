@@ -25,7 +25,6 @@ export async function OPTIONS() {
  * 
  * 请求格式：multipart/form-data
  * - image: File (必需) - 菜单图片
- * - fromLang: string (必需) - 源语言
  * - toLang: string (必需) - 目标语言
  * 
  * 响应格式：
@@ -51,21 +50,19 @@ export async function POST(request: NextRequest) {
     // 解析表单数据
     const formData = await request.formData();
     const image = formData.get('image') as File | null;
-    const fromLang = formData.get('fromLang') as string | null;
     const toLang = formData.get('toLang') as string | null;
 
     console.log('请求参数:', {
       hasImage: !!image,
-      fromLang,
       toLang,
       imageInfo: image ? { name: image.name, size: image.size, type: image.type } : null
     });
 
     // 验证必需参数
-    if (!image || !fromLang || !toLang) {
+    if (!image || !toLang) {
       return setCORSHeaders(
         NextResponse.json(
-          { success: false, error: '缺少必需参数: image, fromLang, toLang' },
+          { success: false, error: '缺少必需参数: image, toLang' },
           { status: 400 }
         )
       );
@@ -105,17 +102,22 @@ export async function POST(request: NextRequest) {
     // 构建翻译提示词
     const prompt = `你是一个专业的菜单翻译助手。
 
-任务：将这张菜单图片中的 ${fromLang} 文字翻译成 ${toLang}。
+## 任务
+为这张菜单添加 ${toLang} 翻译注释。
 
-要求：
-1. 识别图片中所有的菜品名称、价格、描述等文字
-2. 将识别到的文字翻译成 ${toLang}
-3. 在原图上直接渲染翻译后的文字，替换或覆盖原有文字
-4. 保持原有的布局、字体大小比例和整体视觉风格
-5. 确保翻译准确、自然，符合目标语言的表达习惯
-6. 价格数字保持不变，仅翻译文字部分
+## 翻译风格
+- 保留原文，翻译放在原文段落的下方或旁边，根据布局判断
+- 手绘彩笔风格，清晰但不过度遮挡原图
+- 颜色根据背景自动选择对比色
+- 翻译文字略小于原文，清晰可读
 
-请生成一张带有翻译结果的新图片。`;
+## 翻译要求
+- 翻译简洁地道
+- 只翻译菜单内容（菜名、配菜、套餐等）
+- 价格数字保持不变
+- 专有名词转换为目标语言中合适的表达
+
+请生成翻译后的图片。`;
 
     console.log('正在调用 Gemini API...');
 

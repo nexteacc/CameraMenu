@@ -16,7 +16,6 @@ export default function Home() {
   
   // 语言选择
   const [selectedTargetLanguage, setSelectedTargetLanguage] = useState<string>('English');
-  const [selectedFromLanguage, setSelectedFromLanguage] = useState<string>('Simplified Chinese');
   
   // 翻译结果
   const [translatedImageUrl, setTranslatedImageUrl] = useState<string>('');
@@ -53,11 +52,9 @@ export default function Home() {
       // 构建请求数据
       const formData = new FormData();
       formData.append('image', imageFile);
-      formData.append('fromLang', selectedFromLanguage);
       formData.append('toLang', selectedTargetLanguage);
 
       console.log('发送翻译请求:', {
-        fromLang: selectedFromLanguage,
         toLang: selectedTargetLanguage,
         imageSize: imageFile.size,
         imageType: imageFile.type,
@@ -100,13 +97,6 @@ export default function Home() {
   };
   
   /**
-   * 处理源语言切换
-   */
-  const handleFromLanguageChange = (languageName: string) => {
-    setSelectedFromLanguage(languageName);
-  };
-
-  /**
    * 处理目标语言切换
    */
   const handleTargetLanguageChange = (languageName: string) => {
@@ -130,33 +120,16 @@ export default function Home() {
           <h1 className="text-4xl font-bold mb-6 text-black dark:text-white">CameraMenu</h1>
           <div className="text-xl mb-8 max-w-md text-black dark:text-white text-left">
             <p>Travel, Scan Any Menu</p>
-            <p>Spot allergens</p>
-            <p>Dine freely</p>
           </div>
 
           {/* 语言选择器 */}
-          <div className="flex flex-row items-stretch justify-center gap-2 sm:gap-4 mb-8 w-full max-w-3xl px-2">
-            <div className="flex-1 flex flex-col items-center w-full">
-              <p className="mb-1 sm:mb-2 text-sm sm:text-base text-black dark:text-white">From:</p>
-              <LanguageSelector 
-                selectedLanguage={selectedFromLanguage} 
-                onLanguageChange={handleFromLanguageChange} 
-                className="w-full text-base md:text-lg"
-              />
-            </div>
-            
-            <div className="text-xl sm:text-2xl text-black dark:text-white mx-1 sm:mx-2 flex items-center self-center pt-5 sm:pt-6">
-              →
-            </div>
-
-            <div className="flex-1 flex flex-col items-center w-full">
-              <p className="mb-1 sm:mb-2 text-sm sm:text-base text-black dark:text-white">To:</p>
-              <LanguageSelector 
-                selectedLanguage={selectedTargetLanguage} 
-                onLanguageChange={handleTargetLanguageChange} 
-                className="w-full text-base md:text-lg"
-              />
-            </div>
+          <div className="flex flex-col items-center mb-8 w-full max-w-md">
+            <p className="mb-2 text-sm sm:text-base text-black dark:text-white">翻译为:</p>
+            <LanguageSelector 
+              selectedLanguage={selectedTargetLanguage} 
+              onLanguageChange={handleTargetLanguageChange} 
+              className="w-full text-base md:text-lg"
+            />
           </div>
           
           {/* 启动相机按钮 */}
