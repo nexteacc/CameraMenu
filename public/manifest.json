@@ -1,7 +1,7 @@
 {
-  "name": "MeFood",
-  "short_name": "MeFood",
-  "description": "See food, know food",
+  "name": "BananaFood",
+  "short_name": "BananaFood",
+  "description": "Snap, translate, eat - AI-powered menu translation & food recognition",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#000000",

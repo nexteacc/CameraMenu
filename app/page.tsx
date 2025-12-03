@@ -220,7 +220,7 @@ export default function Home() {
             />
           </div>
           
-          <h1 className="text-4xl font-bold mb-12 text-black dark:text-white">CameraMenu</h1>
+          <h1 className="text-4xl font-bold mb-12 text-black dark:text-white">BananaFood</h1>
 
           <div className="flex flex-col items-center gap-6 w-full max-w-md">
             {/* 语言选择器 */}
