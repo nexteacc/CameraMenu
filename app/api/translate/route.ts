@@ -103,21 +103,25 @@ export async function POST(request: NextRequest) {
     const prompt = `You are a professional menu translation assistant.
 
 ## Task
-Add ${toLang} translation annotations to this menu.
+Add ${toLang} translation annotations to this menu image.
+
+## RULES
+- ONLY ADD translation labels 
+- The original menu text must remain 100% visible and unchanged
 
 ## Translation Style
-- Keep the original text, place translations below or beside the original paragraphs based on layout
-- Hand-drawn marker style, clear but not overly blocking the original image
-- Colors automatically selected for contrast based on background
-- Translation text slightly smaller than original, clear and readable
+- Add small translation labels beside or below each menu item
+- Use semi-transparent background labels (like sticky notes or markers)
+- Choose contrasting colors that don't block the original text
+- Translation text should be smaller than original, positioned nearby
+- Hand-written or marker style annotations preferred
 
 ## Translation Requirements
-- Translate concisely and naturally
-- Only translate menu content (dish names, sides, set meals, etc.)
-- Keep price numbers unchanged
-- Convert proper nouns to appropriate expressions in the target language
+- Translate menu items concisely (dish names, descriptions, set meals)
+- Keep all prices, numbers, and symbols unchanged
+- Translate proper nouns appropriately for ${toLang} speakers
 
-Please generate the translated image.`;
+Output: Generate the image with translation annotations added, keeping all original content intact.`;
 
     console.log('正在调用 Gemini API...');
 
@@ -147,7 +151,7 @@ Please generate the translated image.`;
 
     console.log('Gemini API 响应成功');
 
-    // 处理响应
+
     const candidates = response.candidates;
     if (!candidates || candidates.length === 0) {
       return setCORSHeaders(

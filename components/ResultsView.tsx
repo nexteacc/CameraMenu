@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 
 interface ResultsViewProps {
   onRetake: () => void;
@@ -11,26 +11,27 @@ interface ResultsViewProps {
 }
 
 /**
- * 翻译结果展示组件
- * 直接显示 Gemini 返回的 Base64 图片
+ * 结果展示组件 - 全屏沉浸式布局
+ * 点击图片显示/隐藏操作按钮
  */
 const ResultsView = ({
-  onRetake,
   onBack,
   onRetry,
   errorMessage,
   translatedImageUrl,
 }: ResultsViewProps) => {
+  // 控制操作按钮的显示/隐藏
+  const [showActions, setShowActions] = useState(false);
 
   /**
-   * 下载翻译后的图片
+   * 下载图片
    */
   const handleDownload = () => {
     if (!translatedImageUrl) return;
 
     const link = document.createElement('a');
     link.href = translatedImageUrl;
-    link.download = `translated-menu-${Date.now()}.png`;
+    link.download = `result-${Date.now()}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -43,14 +44,13 @@ const ResultsView = ({
     if (!translatedImageUrl || !navigator.share) return;
 
     try {
-      // 将 Data URL 转换为 Blob
       const response = await fetch(translatedImageUrl);
       const blob = await response.blob();
-      const file = new File([blob], 'translated-menu.png', { type: 'image/png' });
+      const file = new File([blob], 'result.png', { type: 'image/png' });
 
       await navigator.share({
-        title: 'CameraMenu Translation Result',
-        text: 'Check out my translated menu',
+        title: 'CameraMenu Result',
+        text: 'Check out my result',
         files: [file],
       });
     } catch (error) {
@@ -58,136 +58,168 @@ const ResultsView = ({
     }
   };
 
+  /**
+   * 点击图片切换操作按钮显示状态
+   */
+  const handleImageClick = () => {
+    setShowActions(!showActions);
+  };
+
   // 检查是否支持分享功能
   const canShare = typeof navigator !== 'undefined' && !!navigator.share;
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-zinc-900 dark:to-zinc-800 p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* 左上角返回按钮 */}
-        <button
-          onClick={onBack}
-          className="mb-4 p-2.5 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
-          aria-label="Back"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
+  // 错误状态 - 显示错误信息和重试按钮
+  if (errorMessage) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black/95 flex flex-col">
+        {/* 右上角关闭按钮 */}
+        <div className="absolute top-4 right-4 z-10">
+          <button
+            onClick={onBack}
+            className="p-2 text-white/80 hover:text-white transition-colors"
+            aria-label="Close"
+          >
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
 
-        {/* 错误信息 */}
-        {errorMessage && (
-          <div className="mb-6 p-4 bg-red-600/10 dark:bg-red-600/20 border border-red-600/20 rounded-lg">
-            <div className="flex items-start space-x-3">
-              <svg className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        {/* 错误内容居中显示 */}
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="max-w-sm w-full bg-zinc-900/80 rounded-2xl p-6 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
+              <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <div className="flex-1">
-                <h3 className="text-red-600 font-medium">Failed</h3>
-                <p className="text-red-600/80 text-sm mt-1">{errorMessage}</p>
-              </div>
             </div>
+            <h3 className="text-white text-lg font-medium mb-2">处理失败</h3>
+            <p className="text-zinc-400 text-sm mb-6">{errorMessage}</p>
             <button
               onClick={onRetry}
-              className="mt-4 w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-600/90 transition-colors flex items-center justify-center space-x-2"
+              className="w-full px-4 py-3 bg-white text-black rounded-xl font-medium hover:bg-zinc-200 transition-colors flex items-center justify-center space-x-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              <span>Retry</span>
+              <span>重试</span>
             </button>
           </div>
-        )}
+        </div>
+      </div>
+    );
+  }
 
-        {/* 翻译结果图片 */}
-        {translatedImageUrl && !errorMessage && (
-          <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-lg overflow-hidden">
-            {/* 图片显示区域 - 带浮动工具栏 */}
-            <div className="relative p-4">
-              <div className="flex justify-center">
-                <img
-                  src={translatedImageUrl}
-                  alt="Translation result"
-                  className="max-w-full h-auto rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800"
-                  style={{ maxHeight: '65vh' }}
-                  onError={(e) => {
-                    console.error('Image load failed');
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              </div>
-              
-              {/* 浮动工具栏 - 右下角 */}
-              <div className="absolute bottom-6 right-6 flex items-center space-x-2">
-                {/* 分享按钮（仅移动端显示） */}
-                {canShare && (
-                  <button
-                    onClick={handleShare}
-                    className="p-2.5 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition-colors shadow-lg"
-                    aria-label="Share"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                    </svg>
-                  </button>
-                )}
-
-                {/* 下载按钮 */}
-                <button
-                  onClick={handleDownload}
-                  className="p-2.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors shadow-lg"
-                  aria-label="Download"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            {/* 底部操作区 */}
-            <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800">
-              <div className="flex flex-col gap-3">
-                <button
-                  onClick={onRetake}
-                  className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <span>New Photo</span>
-                </button>
-
-                <button
-                  onClick={onRetry}
-                  className="w-full px-4 py-3 bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-white rounded-lg hover:bg-zinc-200/80 dark:hover:bg-zinc-800/80 transition-colors flex items-center justify-center space-x-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  <span>Retry</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 无结果时的空状态 */}
-        {!translatedImageUrl && !errorMessage && (
-          <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-lg p-8 text-center">
-            <svg className="w-16 h-16 mx-auto text-zinc-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+  // 成功状态 - 全屏沉浸式图片展示
+  if (translatedImageUrl) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black/95 flex flex-col">
+        {/* 右上角关闭按钮 */}
+        <div className="absolute top-4 right-4 z-10">
+          <button
+            onClick={onBack}
+            className="p-2 text-white/80 hover:text-white transition-colors"
+            aria-label="Close"
+          >
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
-            <p className="text-zinc-500">No result</p>
+          </button>
+        </div>
+
+        {/* 图片展示区域 - 点击切换操作按钮 */}
+        <div 
+          className="flex-1 flex items-center justify-center p-4 cursor-pointer"
+          onClick={handleImageClick}
+        >
+          <img
+            src={translatedImageUrl}
+            alt="Result"
+            className="max-w-full max-h-full object-contain rounded-lg"
+            onError={(e) => {
+              console.error('Image load failed');
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
+        </div>
+
+        {/* 右下角操作按钮 - 点击图片后显示/隐藏 */}
+        <div 
+          className={`absolute bottom-8 right-6 flex items-center space-x-3 transition-all duration-300 ${
+            showActions 
+              ? 'opacity-100 translate-y-0' 
+              : 'opacity-0 translate-y-4 pointer-events-none'
+          }`}
+        >
+          {/* 分享按钮（仅移动端支持时显示） */}
+          {canShare && (
             <button
-              onClick={onRetake}
-              className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleShare();
+              }}
+              className="p-3.5 bg-emerald-500 text-white rounded-full hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/30"
+              aria-label="Share"
             >
-              Take Photo
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
             </button>
-          </div>
-        )}
+          )}
+
+          {/* 下载按钮 */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDownload();
+            }}
+            className="p-3.5 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/30"
+            aria-label="Download"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+          </button>
+        </div>
+
+        {/* 底部提示文字 - 点击图片后显示/隐藏 */}
+        <div 
+          className={`absolute bottom-8 left-0 right-0 text-center transition-all duration-300 ${
+            showActions 
+              ? 'opacity-0' 
+              : 'opacity-60'
+          }`}
+        >
+          <p className="text-white/60 text-sm">点击图片显示操作</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 空状态 - 无结果
+  return (
+    <div className="fixed inset-0 z-50 bg-black/95 flex flex-col">
+      {/* 右上角关闭按钮 */}
+      <div className="absolute top-4 right-4 z-10">
+        <button
+          onClick={onBack}
+          className="p-2 text-white/80 hover:text-white transition-colors"
+          aria-label="Close"
+        >
+          <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      {/* 空状态内容 */}
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="text-center">
+          <svg className="w-20 h-20 mx-auto text-zinc-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <p className="text-zinc-500">暂无结果</p>
+        </div>
       </div>
     </div>
   );

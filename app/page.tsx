@@ -316,7 +316,7 @@ export default function Home() {
           </div>
           
           {/* 拍照和相册按钮 */}
-          <div className="flex items-center gap-8">
+          <div className="flex flex-col items-center gap-6">
             {/* 拍照按钮 */}
             <button
               onClick={() => cameraInputRef.current?.click()}
