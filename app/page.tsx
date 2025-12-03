@@ -1,261 +1,131 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import CameraView from '../components/CameraView';
 import ResultsView from '../components/ResultsView';
 import LanguageSelector from '../components/LanguageSelector';
 import AuroraBackground from '../components/AuroraBackground';
 
-// Simplified status mapping based on actual API states
-type TranslationStatus = 
-  | 'Analyzing'     // Initial analysis phase
-  | 'Waiting'       // Waiting in queue
-  | 'Processing'    // Active translation
-  | 'Completed'     // Successfully completed
-  | 'Terminated'    // Failed/terminated
-  | 'NotSupported'; // Unsupported content
-
-interface TranslationTask {
-  taskId: string;
-  status: TranslationStatus;
-  progress: number;
-}
-
-// Helper function to map API status to user-friendly display
-const getStatusDisplay = (status: TranslationStatus): string => {
-  switch (status) {
-    case 'Analyzing': return 'Analyzing...';
-    case 'Waiting': return 'Waiting...';
-    case 'Processing': return 'Translating...';
-    case 'Completed': return 'Translation Complete';
-    case 'Terminated': return 'Translation Failed';
-    case 'NotSupported': return 'Unsupported Content';
-    default: return 'Processing...';
-  }
-};
-
-// Helper function to determine if status is final
-const isFinalStatus = (status: TranslationStatus): boolean => {
-  return status === 'Completed' || status === 'Terminated' || status === 'NotSupported';
-};
+// 简化的应用状态
+type AppState = 'idle' | 'active' | 'processing' | 'results';
 
 export default function Home() {
-  const [cameraState, setCameraState] = useState<'idle' | 'active' | 'processing' | 'results'>('idle');
+  // 应用状态
+  const [appState, setAppState] = useState<AppState>('idle');
+  
+  // 语言选择
   const [selectedTargetLanguage, setSelectedTargetLanguage] = useState<string>('English');
   const [selectedFromLanguage, setSelectedFromLanguage] = useState<string>('Simplified Chinese');
-  const [translationTask, setTranslationTask] = useState<TranslationTask | null>(null);
-  // 移除translatedFileUrl状态，现在使用硬编码PDF
-  const [errorMessage, setErrorMessage] = useState<string>('');
-  const [lastCapturedImage, setLastCapturedImage] = useState<Blob | null>(null);
   
+  // 翻译结果
+  const [translatedImageUrl, setTranslatedImageUrl] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
+  
+  // 保存最后一次拍摄的图片用于重试
+  const [lastCapturedImage, setLastCapturedImage] = useState<File | null>(null);
+  
+  // 认证
   const { getToken } = useAuth();
   
-  
-  const pollingTimerRef = useRef<NodeJS.Timeout | null>(null);
-  
- 
+  /**
+   * 返回首页
+   */
   const handleExit = () => {
-    setCameraState('idle');
+    setAppState('idle');
     setErrorMessage('');
-    
-
-    if (pollingTimerRef.current) {
-      clearInterval(pollingTimerRef.current);
-      pollingTimerRef.current = null;
-    }
+    setTranslatedImageUrl('');
   };
-  
 
   /**
-   * 处理拍照 - 测试模式：跳过后端API调用，直接展示硬编码PDF
-   * 用于测试PDF显示、下载和缓存功能
+   * 处理拍照/选择图片
    */
-  const handleCapture = async (imageBlob: Blob) => {
+  const handleCapture = async (imageFile: File) => {
     try {
-      // 保存拍摄的图片（用于重试功能）
-      setLastCapturedImage(imageBlob);
-      
-      // 清除之前的错误信息
+      // 保存图片用于重试
+      setLastCapturedImage(imageFile);
       setErrorMessage('');
+      setAppState('processing');
       
-      // 模拟处理状态（可选，也可以直接跳转到结果页）
-      setCameraState('processing');
+      // 获取认证 token
+      const token = await getToken();
       
-      // 模拟短暂的处理时间，然后直接跳转到结果页
-      setTimeout(() => {
-        // 设置模拟的翻译任务状态
-        setTranslationTask({
-          taskId: 'test-task-id-' + Date.now(),
-          status: 'Completed',
-          progress: 100
-        });
-        
-        // 直接跳转到结果页面，ResultsView组件内部会使用硬编码的PDF URL
-        setCameraState('results');
-        
-        console.log('测试模式：跳过后端API调用，直接展示硬编码PDF');
-      }, 1000); // 1秒后跳转，模拟处理时间
+      // 构建请求数据
+      const formData = new FormData();
+      formData.append('image', imageFile);
+      formData.append('fromLang', selectedFromLanguage);
+      formData.append('toLang', selectedTargetLanguage);
+
+      console.log('发送翻译请求:', {
+        fromLang: selectedFromLanguage,
+        toLang: selectedTargetLanguage,
+        imageSize: imageFile.size,
+        imageType: imageFile.type,
+      });
+
+      // 调用翻译 API
+      const response = await fetch('/api/translate', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || '翻译失败');
+      }
+
+      // 设置翻译结果
+      setTranslatedImageUrl(result.imageDataUrl);
+      setErrorMessage('');
+      setAppState('results');
       
     } catch (error) {
-      console.error('Photo processing error:', error);
-      setErrorMessage((error as Error).message || 'Error processing image');
-      setCameraState('results');
+      console.error('翻译处理错误:', error);
+      setErrorMessage((error as Error).message || '处理图片时发生错误');
+      setAppState('results');
     }
   };
-  
-  const pollTranslationResult = async (taskId: string) => {
-    if (pollingTimerRef.current) {
-      clearInterval(pollingTimerRef.current);
-      pollingTimerRef.current = null;
-    }
-    
-    const pollInterval = 2000;
-    let pollCount = 0;
-    const maxPolls = 30;
-    
-    pollingTimerRef.current = setInterval(async () => {
-      try {
-        pollCount++;
-        
-        const token = await getToken();
-        
-        const response = await fetch(`/api/task/${taskId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Failed to get task status and unable to parse error response' }));
-          if (pollingTimerRef.current) {
-            clearInterval(pollingTimerRef.current);
-            pollingTimerRef.current = null;
-          }
-          setErrorMessage(errorData.error || 'Failed to get task status');
-          setCameraState('results');
-          return;
-        }
-        
-        const resultData = await response.json();
-        
-        const currentStatus = resultData.status as TranslationStatus;
-        setTranslationTask({
-          taskId: resultData.taskId,
-          status: currentStatus,
-          progress: resultData.progress || 0
-        });
-        
-        if (isFinalStatus(currentStatus)) {
-          if (pollingTimerRef.current) {
-            clearInterval(pollingTimerRef.current);
-            pollingTimerRef.current = null;
-          }
-          
-          if (currentStatus === 'Completed') {
-            // 移除setTranslatedFileUrl调用，现在使用硬编码PDF
-            setErrorMessage('');
-          } else {
-            let errorMsg = resultData.error || 'Translation failed';
-            if (currentStatus === 'NotSupported') {
-              errorMsg = 'Document content is not supported for translation, please try another document';
-            } else if (currentStatus === 'Terminated') {
-              errorMsg = resultData.error || 'Translation task was terminated, please try again';
-            }
-            setErrorMessage(errorMsg);
-          }
-          
-          setCameraState('results');
-        }
-        
-        if (pollCount >= maxPolls && !isFinalStatus(currentStatus)) {
-          if (pollingTimerRef.current) {
-            clearInterval(pollingTimerRef.current);
-            pollingTimerRef.current = null;
-          }
-          setErrorMessage('Translation timeout, please try again later');
-          setCameraState('results');
-        }
-        
-      } catch (error) {
-        console.error('Polling error:', error);
-        
-        if (pollingTimerRef.current) {
-          clearInterval(pollingTimerRef.current);
-          pollingTimerRef.current = null;
-        }
-        
-        setErrorMessage((error as Error).message || 'Error getting translation results');
-        setCameraState('results');
-      }
-    }, pollInterval);
-  };
-  
+
   /**
-   * 处理重试 - 测试模式：跳过后端API调用，直接展示硬编码PDF
+   * 重试翻译
    */
   const handleRetry = async () => {
-    try {
-      if (!lastCapturedImage) {
-        throw new Error('No image available for retry');
-      }
-      
-      setCameraState('processing');
-      setErrorMessage('');
-      
-      // 模拟短暂的处理时间，然后直接跳转到结果页
-      setTimeout(() => {
-        // 设置模拟的翻译任务状态
-        setTranslationTask({
-          taskId: 'retry-task-id-' + Date.now(),
-          status: 'Completed',
-          progress: 100
-        });
-        
-        // 直接跳转到结果页面，ResultsView组件内部会使用硬编码的PDF URL
-        setCameraState('results');
-        
-        console.log('测试模式重试：跳过后端API调用，直接展示硬编码PDF');
-      }, 800); // 稍短的处理时间
-      
-    } catch (error) {
-      console.error('Retry error:', error);
-      setErrorMessage((error as Error).message || 'Error during retry');
-      setCameraState('results');
+    if (lastCapturedImage) {
+      await handleCapture(lastCapturedImage);
     }
   };
   
   /**
-   * 处理源语言切换 - 测试模式
+   * 处理源语言切换
    */
   const handleFromLanguageChange = (languageName: string) => {
     setSelectedFromLanguage(languageName);
-    if (cameraState === 'results' && lastCapturedImage) {
-      console.log('测试模式：源语言切换到', languageName);
-      handleRetry();
-    }
   };
 
   /**
-   * 处理目标语言切换 - 测试模式
+   * 处理目标语言切换
    */
   const handleTargetLanguageChange = (languageName: string) => {
     setSelectedTargetLanguage(languageName);
-    
-    if (cameraState === 'results' && lastCapturedImage) {
-      console.log('测试模式：目标语言切换到', languageName);
-      handleRetry();
-    }
   };
   
+  /**
+   * 启动相机
+   */
   const handleCameraStart = () => {
-    setCameraState('active');
+    setAppState('active');
     setErrorMessage('');
+    setTranslatedImageUrl('');
   };
   
   return (
     <AuroraBackground className="text-white">
-      {cameraState === 'idle' && (
+      {/* 首页 - 语言选择和启动相机 */}
+      {appState === 'idle' && (
         <div className="flex flex-col items-center justify-center min-h-screen p-6 text-center">
           <h1 className="text-4xl font-bold mb-6 text-black dark:text-white">CameraMenu</h1>
           <div className="text-xl mb-8 max-w-md text-black dark:text-white text-left">
@@ -264,6 +134,7 @@ export default function Home() {
             <p>Dine freely</p>
           </div>
 
+          {/* 语言选择器 */}
           <div className="flex flex-row items-stretch justify-center gap-2 sm:gap-4 mb-8 w-full max-w-3xl px-2">
             <div className="flex-1 flex flex-col items-center w-full">
               <p className="mb-1 sm:mb-2 text-sm sm:text-base text-black dark:text-white">From:</p>
@@ -274,7 +145,9 @@ export default function Home() {
               />
             </div>
             
-            <div className="text-xl sm:text-2xl text-black dark:text-white mx-1 sm:mx-2 flex items-center self-center pt-5 sm:pt-6">→</div>
+            <div className="text-xl sm:text-2xl text-black dark:text-white mx-1 sm:mx-2 flex items-center self-center pt-5 sm:pt-6">
+              →
+            </div>
 
             <div className="flex-1 flex flex-col items-center w-full">
               <p className="mb-1 sm:mb-2 text-sm sm:text-base text-black dark:text-white">To:</p>
@@ -286,6 +159,7 @@ export default function Home() {
             </div>
           </div>
           
+          {/* 启动相机按钮 */}
           <button
             onClick={handleCameraStart}
             className="px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-xl font-semibold transition-colors flex items-center"
@@ -315,36 +189,40 @@ export default function Home() {
         </div>
       )}
       
-      {cameraState === 'active' && (
+      {/* 相机视图 */}
+      {appState === 'active' && (
         <CameraView 
           onCapture={handleCapture} 
           onExit={handleExit} 
         />
       )}
       
-      {cameraState === 'processing' && (
+      {/* 处理中状态 */}
+      {appState === 'processing' && (
         <div className="flex flex-col items-center justify-center min-h-screen p-6">
           <div className="text-center bg-black/40 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-emerald-400 border-r-transparent border-l-transparent mb-6"></div>
             <h2 className="text-2xl font-semibold mb-3 text-white">
-              {translationTask ? getStatusDisplay(translationTask.status) : ''}
+              正在翻译菜单...
             </h2>
             <p className="text-emerald-200 text-lg">
-              {translationTask ? `Progress: ${translationTask.progress}%` : ''}
+              AI 正在识别并翻译图片中的文字
+            </p>
+            <p className="text-zinc-400 text-sm mt-4">
+              这可能需要几秒钟，请稍候
             </p>
           </div>
         </div>
       )}
       
-      {cameraState === 'results' && (
+      {/* 结果视图 */}
+      {appState === 'results' && (
         <ResultsView 
           errorMessage={errorMessage}
-          selectedLanguage={selectedTargetLanguage}
-          onRetake={() => setCameraState('active')}
+          translatedImageUrl={translatedImageUrl}
+          onRetake={() => setAppState('active')}
           onBack={handleExit}
           onRetry={handleRetry}
-          onLanguageChange={handleTargetLanguageChange}
-          translationTask={translationTask}
         />
       )}
     </AuroraBackground>

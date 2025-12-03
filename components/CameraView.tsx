@@ -1,205 +1,151 @@
-import { useRef, useState, useEffect } from 'react';
-import Image from "next/image";
+'use client';
+
+import { useRef } from 'react';
 
 interface CameraViewProps {
+  onCapture: (image: File) => Promise<void>;
   onExit: () => void;
-  onCapture: (image: Blob) => Promise<void>;
   isLoading?: boolean;
-  
 }
 
-const CameraView = ({ onExit, onCapture, isLoading }: CameraViewProps) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+/**
+ * 相机视图组件
+ * 使用 HTML input capture 调用系统原生相机（移动端）或文件选择器（桌面端）
+ */
+const CameraView = ({ onCapture, onExit, isLoading }: CameraViewProps) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [cameraError, setCameraError] = useState<string>('');
-  // const [isCameraStarting, setIsCameraStarting] = useState<boolean>(true); // Removed for direct preview
-
-  const startCamera = async () => {
-    // setIsCameraStarting(true); // Removed
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: "environment",
-          width: { ideal: 1920 }, 
-          height: { ideal: 1080 },
-        },
-      });
-      streamRef.current = mediaStream;
-      setCameraError('');
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        videoRef.current.play().catch(playError => {
-            console.error('Error attempting to play video:', playError);
-            setCameraError('Could not play video stream.');
-        });
-      }
-    } catch (error: unknown) {
-      console.error("Error accessing camera:", error);
-      if (error instanceof Error && error.name === 'NotAllowedError') {
-        setCameraError('Camera permission denied. Please enable camera access in browser settings');
-      } else if (error instanceof Error && error.name === 'NotFoundError') {
-        setCameraError('No camera device found');
-      } else if (error instanceof Error && error.name === 'NotSupportedError') {
-        setCameraError('Browser does not support camera functionality');
-      } else {
-        setCameraError('Failed to start camera. Please refresh the page and try again');
-      }
-      // setIsCameraStarting(false); // Removed
+  /**
+   * 处理文件选择/拍照完成
+   */
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      await onCapture(file);
+    }
+    // 重置 input 以便可以再次选择同一文件
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
-  useEffect(() => {
-    startCamera();
-
-    return () => {
-     
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => {
-          track.stop();
-        });
-        streamRef.current = null;
-      }
-      
-      const videoElement = videoRef.current;
-      if (videoElement) {
-        videoElement.srcObject = null;
-      }
-    };
-  }, []); 
-
-  const capture = () => {
-    if (!canvasRef.current || !videoRef.current) {
-      console.error('Canvas or video element not available');
-      return;
-    }
-    
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-
-    if (video.videoWidth === 0 || video.videoHeight === 0) {
-      console.error('Video not ready');
-      return;
-    }
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    const context = canvas.getContext("2d");
-    if (!context) {
-      console.error('Cannot get canvas context');
-      return;
-    }
-    
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    const imageSrc = canvas.toDataURL("image/jpeg", 0.9);
-    setPreviewImage(imageSrc);
-    
-    canvas.toBlob((blob) => {
-      if (blob) {
-        onCapture?.(blob);
-      } else {
-        console.error('Failed to create blob from canvas');
-      }
-    }, "image/jpeg", 0.9);
+  /**
+   * 触发文件选择/相机
+   */
+  const triggerCapture = () => {
+    fileInputRef.current?.click();
   };
 
   return (
-    <div className="flex flex-col items-center justify-start min-h-screen pt-12 pb-8 bg-zinc-50 dark:bg-zinc-900">
-      {/* Ensure the parent container maintains aspect ratio for the video to fill correctly */}
-      <div className="relative w-full max-w-2xl aspect-[3/4] bg-black rounded-2xl overflow-hidden flex items-center justify-center">
-        {/* Removed isCameraStarting loader */}
-        {previewImage ? (
-          <Image
-            src={previewImage}
-            alt="Preview"
-            fill
-            className="object-cover"
-            unoptimized
-          />
-        ) : (
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            controls={false}
-            webkit-playsinline="true"
-            // onLoadedMetadata is still useful for knowing when the video dimensions are available,
-            // but setIsCameraStarting is removed.
-            onLoadedMetadata={() => {
-              if (videoRef.current) {
-                // Optional: log dimensions or perform other actions once metadata is loaded
-                console.log('Video metadata loaded:', videoRef.current.videoWidth, videoRef.current.videoHeight);
-              }
-            }}
-            className="w-full h-full object-cover"
-          />
-        )}
-        <canvas ref={canvasRef} className="hidden" width={1920} height={1080} />
+    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-zinc-50 dark:bg-zinc-900">
+      {/* 隐藏的文件输入 */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleFileChange}
+        className="hidden"
+        disabled={isLoading}
+      />
 
-        <div className="absolute bottom-8 left-0 right-0 flex justify-center space-x-6">
-          <button
-            onClick={onExit}
-            className="rounded-full bg-black/50 hover:bg-black/70 w-12 h-12 flex items-center justify-center backdrop-blur-md border border-white/30 transition-all duration-200 shadow-xl focus:outline-none focus:ring-2 focus:ring-white/50"
-            disabled={isLoading}
+      {/* 主要内容区域 */}
+      <div className="relative w-full max-w-md aspect-[3/4] bg-gradient-to-br from-blue-100 to-indigo-200 dark:from-zinc-800 dark:to-zinc-700 rounded-3xl overflow-hidden flex flex-col items-center justify-center shadow-2xl border border-white/20">
+        {/* 相机图标 */}
+        <div className="mb-8">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-24 w-24 text-blue-500 dark:text-blue-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-          
-          {!previewImage && (
-            <button
-              onClick={capture}
-              className="rounded-full bg-white p-4 shadow-lg"
-              disabled={isLoading}
-            >
-              <div className="w-8 h-8 rounded-full bg-red-500"></div>
-            </button>
-          )}
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+          </svg>
         </div>
-        
-        {isLoading && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <div className="text-white text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white mb-2"></div>
-              <p>loading...</p>
-            </div>
-          </div>
-        )}
-        
-        {cameraError && (
-          <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4">
-            <div className="bg-red-900/90 border border-red-500 rounded-lg p-6 text-center max-w-sm">
-              <p className="text-red-300 mb-4">{cameraError}</p>
-              <button
-                onClick={() => {
-                  setCameraError('');
-                  startCamera();
-                }}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+
+        {/* 提示文字 */}
+        <p className="text-lg text-zinc-600 dark:text-zinc-300 mb-8 text-center px-6">
+          点击下方按钮拍摄菜单照片
+        </p>
+
+        {/* 拍照按钮 */}
+        <button
+          onClick={triggerCapture}
+          disabled={isLoading}
+          className="px-8 py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-full text-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl disabled:cursor-not-allowed flex items-center space-x-2"
+        >
+          {isLoading ? (
+            <>
+              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+              <span>处理中...</span>
+            </>
+          ) : (
+            <>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                try again
-              </button>
-            </div>
-          </div>
-        )}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+              <span>拍摄照片</span>
+            </>
+          )}
+        </button>
+
+        {/* 或者从相册选择 */}
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-4">
+          移动端将自动打开相机
+        </p>
       </div>
+
+      {/* 返回按钮 */}
+      <button
+        onClick={onExit}
+        disabled={isLoading}
+        className="mt-8 px-6 py-3 bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 text-zinc-700 dark:text-zinc-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M10 19l-7-7m0 0l7-7m-7 7h18"
+          />
+        </svg>
+        <span>返回</span>
+      </button>
     </div>
   );
 };

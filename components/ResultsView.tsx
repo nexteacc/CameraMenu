@@ -1,485 +1,211 @@
+'use client';
 
-import { useState, useEffect, useRef, useCallback } from "react"; 
-import { Document, Page, pdfjs } from 'react-pdf';
-import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
-import 'react-pdf/dist/esm/Page/TextLayer.css';
-
-// 配置PDF.js Worker - 移动端专用CDN配置确保兼容性
-if (typeof window !== 'undefined') {
-  pdfjs.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@4.8.69/build/pdf.worker.min.mjs';
-}
-
-// 翻译状态类型定义
-type TranslationStatus = 
-  | 'Analyzing'     // Initial analysis phase
-  | 'Waiting'       // Waiting in queue
-  | 'Processing'    // Active translation
-  | 'Completed'     // Successfully completed
-  | 'Terminated'    // Failed/terminated
-  | 'NotSupported'; // Unsupported content
-
-interface TranslationTask {
-  taskId: string;
-  status: TranslationStatus;
-  progress: number;
-}
+import React from 'react';
 
 interface ResultsViewProps {
   onRetake: () => void;
   onBack: () => void;
   onRetry: () => void;
   errorMessage: string;
-  selectedLanguage?: string;
-  onLanguageChange?: (language: string) => void;
-  translationTask?: TranslationTask | null;
+  translatedImageUrl: string;
 }
 
+/**
+ * 翻译结果展示组件
+ * 直接显示 Gemini 返回的 Base64 图片
+ */
 const ResultsView = ({
   onRetake,
   onBack,
   onRetry,
   errorMessage,
-  selectedLanguage,
-  onLanguageChange,
-  translationTask,
+  translatedImageUrl,
 }: ResultsViewProps) => {
-  // 硬编码PDF URL用于测试
-  const HARDCODED_PDF_URL = "https://ai-trs.oss.simplifyai.cn/private/trsb-runner/translatorentitytask/5901c9bc-e99a-4548-9de4-b9a3d4ad8e94.pdf?OSSAccessKeyId=LTAI5tRiqSSi7zKGfT92Y3o3&Expires=1750848248&Signature=uKRZvK2JAkly5TvvpOc%2BFvkeFr4%3D";
-  
-  const [imageLoading, setImageLoading] = useState(true); 
-  const [imageError, setImageError] = useState(false); 
-  const [numPages, setNumPages] = useState<number | null>(null);
-  const [scale, setScale] = useState<number>(1.0);
-  const [containerWidth, setContainerWidth] = useState<number>(0);
-  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
-  const [pageWidth, setPageWidth] = useState<number>(0);
-  
-  // 分离两个不同的 ref
-  const outerContainerRef = useRef<HTMLDivElement>(null);
-  const pdfContainerRef = useRef<HTMLDivElement>(null);
-  const isMountedRef = useRef(true); // 组件挂载状态追踪
-  
-  // 组件挂载状态管理
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
 
-  // 安全的状态更新函数
-  const safeSetState = useCallback((setter: () => void) => {
-    if (isMountedRef.current) {
-      setter();
-    }
-  }, []);
+  /**
+   * 下载翻译后的图片
+   */
+  const handleDownload = () => {
+    if (!translatedImageUrl) return;
 
-  // 组件卸载时的全局清理 - 增强版
-  useEffect(() => {
-    return () => {
-      // 清理所有可能的blob URL
-      if (pdfBlobUrl) {
-        URL.revokeObjectURL(pdfBlobUrl);
-      }
-      isMountedRef.current = false;
-    };
-  }, [pdfBlobUrl]);
-
-  // 移动端优化的PDF配置选项 - 确保原图质量
-  const pdfOptions = {
-    cMapUrl: 'https://unpkg.com/pdfjs-dist@4.8.69/cmaps/',
-    cMapPacked: true,
-    standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@4.8.69/standard_fonts/',
-    maxImageSize: -1, // 移除图片大小限制，保持原图质量
-    disableFontFace: false,
-    useSystemFonts: false,
+    const link = document.createElement('a');
+    link.href = translatedImageUrl;
+    link.download = `translated-menu-${Date.now()}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   /**
-   * 智能计算最佳缩放比例 - 自适应屏幕大小
+   * 分享图片（移动端）
    */
-  const calculateOptimalScale = useCallback((containerWidth: number, pageWidth?: number) => {
-    if (!pageWidth || containerWidth <= 0) return 1.0;
-    
-    const margin = 32;
-    const availableWidth = containerWidth - margin;
-    const scale = availableWidth / pageWidth;
-    
-    return Math.min(Math.max(scale, 0.3), 2.0);
-  }, []);
+  const handleShare = async () => {
+    if (!translatedImageUrl || !navigator.share) return;
 
-  // 监听容器尺寸变化 - 修复版
-  useEffect(() => {
-    const updateContainerWidth = () => {
-      if (outerContainerRef.current && isMountedRef.current) {
-        const width = outerContainerRef.current.clientWidth;
-        safeSetState(() => {
-          setContainerWidth(width);
-          const optimalScale = calculateOptimalScale(width, pageWidth);
-          setScale(optimalScale);
-        });
-      }
-    };
+    try {
+      // 将 Data URL 转换为 Blob
+      const response = await fetch(translatedImageUrl);
+      const blob = await response.blob();
+      const file = new File([blob], 'translated-menu.png', { type: 'image/png' });
 
-    updateContainerWidth();
-    window.addEventListener('resize', updateContainerWidth);
-    
-    return () => {
-      window.removeEventListener('resize', updateContainerWidth);
-    };
-  }, [pageWidth, calculateOptimalScale, safeSetState]);
-
-  // PDF获取和缓存逻辑 - 使用硬编码URL
-  useEffect(() => {
-    safeSetState(() => {
-      setImageLoading(true);
-      setImageError(false);
-      setNumPages(null);
-    });
-
-    let currentBlobUrl: string | null = null;
-    let abortController = new AbortController();
-
-    const fetchAndCachePdf = async () => {
-      try {
-        const response = await fetch(HARDCODED_PDF_URL, {
-          signal: abortController.signal
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const blob = await response.blob();
-        
-        if (abortController.signal.aborted || !isMountedRef.current) {
-          return;
-        }
-        
-        const blobUrl = URL.createObjectURL(blob);
-        currentBlobUrl = blobUrl;
-        
-        safeSetState(() => {
-          setPdfBlobUrl(blobUrl);
-        });
-        
-      } catch (error) {
-        if (error.name === 'AbortError') return;
-        
-        console.error("Failed to fetch and cache PDF:", error);
-        safeSetState(() => {
-          setImageError(true);
-          setImageLoading(false);
-        });
-      }
-    };
-
-    fetchAndCachePdf();
-
-    return () => {
-      abortController.abort();
-      if (currentBlobUrl) {
-        URL.revokeObjectURL(currentBlobUrl);
-      }
-    };
-  }, [safeSetState]);
-
-  // 自适应缩放效果
-  useEffect(() => {
-    if (pdfBlobUrl && containerWidth > 0 && pageWidth > 0 && isMountedRef.current) {
-      const optimalScale = calculateOptimalScale(containerWidth, pageWidth);
-      setScale(optimalScale);
-    }
-  }, [pdfBlobUrl, containerWidth, pageWidth, calculateOptimalScale]);
-
-  // PDF回调函数 - 安全版本
-  const onDocumentLoadSuccess = useCallback(({ numPages: nextNumPages }: { numPages: number }) => {
-    console.log('PDF loaded successfully, pages:', nextNumPages);
-    safeSetState(() => {
-      setNumPages(nextNumPages);
-      setImageLoading(false);
-      setImageError(false);
-    });
-  }, [safeSetState]);
-
-  const onPageLoadSuccess = useCallback((page: any) => {
-    if (page && page.width && !pageWidth && isMountedRef.current) {
-      console.log('Page loaded, width:', page.width);
-      safeSetState(() => {
-        setPageWidth(page.width);
+      await navigator.share({
+        title: 'CameraMenu 翻译结果',
+        text: '查看我翻译的菜单',
+        files: [file],
       });
+    } catch (error) {
+      console.error('分享失败:', error);
     }
-  }, [pageWidth, safeSetState]);
+  };
 
-  const onDocumentLoadError = useCallback((error: Error) => {
-    console.error('PDF load error:', error);
-    safeSetState(() => {
-      setImageLoading(false);
-      setImageError(true);
-    });
-  }, [safeSetState]);
-
-  // 触摸和滚轮缩放支持 - 修复版本
-  useEffect(() => {
-    const container = pdfContainerRef.current;
-    if (!container) return;
-
-    let initialDistance = 0;
-    let initialScale = 1;
-    let isZooming = false;
-
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      const delta = e.deltaY > 0 ? -0.1 : 0.1;
-      safeSetState(() => {
-        setScale(prevScale => {
-          const newScale = prevScale + delta;
-          return Math.min(Math.max(newScale, 0.3), 3.0);
-        });
-      });
-    };
-
-    const handleTouchStart = (e: TouchEvent) => {
-      if (e.touches.length === 2) {
-        e.preventDefault();
-        isZooming = true;
-        const touch1 = e.touches[0];
-        const touch2 = e.touches[1];
-        initialDistance = Math.sqrt(
-          Math.pow(touch2.clientX - touch1.clientX, 2) +
-          Math.pow(touch2.clientY - touch1.clientY, 2)
-        );
-        initialScale = scale; // 直接使用当前scale值
-      }
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length === 2 && isZooming) {
-        e.preventDefault();
-        const touch1 = e.touches[0];
-        const touch2 = e.touches[1];
-        const currentDistance = Math.sqrt(
-          Math.pow(touch2.clientX - touch1.clientX, 2) +
-          Math.pow(touch2.clientY - touch1.clientY, 2)
-        );
-        
-        if (initialDistance > 0) {
-          const scaleChange = currentDistance / initialDistance;
-          const newScale = initialScale * scaleChange;
-          safeSetState(() => {
-            setScale(Math.min(Math.max(newScale, 0.3), 3.0));
-          });
-        }
-      }
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      if (e.touches.length < 2) {
-        isZooming = false;
-        initialDistance = 0;
-        initialScale = 1;
-      }
-    };
-
-    container.addEventListener('wheel', handleWheel, { passive: false });
-    container.addEventListener('touchstart', handleTouchStart, { passive: false });
-    container.addEventListener('touchmove', handleTouchMove, { passive: false });
-    container.addEventListener('touchend', handleTouchEnd, { passive: false });
-
-    return () => {
-      container.removeEventListener('wheel', handleWheel);
-      container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchmove', handleTouchMove);
-      container.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [scale, safeSetState]);
-
-  // 安全的重新加载函数
-  const handleReload = useCallback(() => {
-    safeSetState(() => {
-      setImageError(false);
-      setImageLoading(true);
-    });
-    
-    // 清理旧的 blob URL
-    if (pdfBlobUrl) {
-      URL.revokeObjectURL(pdfBlobUrl);
-      setPdfBlobUrl(null);
-    }
-    
-    const fetchPdf = async () => {
-      try {
-        const response = await fetch(HARDCODED_PDF_URL);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const blob = await response.blob();
-        
-        if (!isMountedRef.current) return;
-        
-        const blobUrl = URL.createObjectURL(blob);
-        safeSetState(() => {
-          setPdfBlobUrl(blobUrl);
-        });
-      } catch (error) {
-        console.error("Failed to reload PDF:", error);
-        safeSetState(() => {
-          setImageError(true);
-          setImageLoading(false);
-        });
-      }
-    };
-    
-    fetchPdf();
-  }, [pdfBlobUrl, safeSetState]);
+  // 检查是否支持分享功能
+  const canShare = typeof navigator !== 'undefined' && !!navigator.share;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-zinc-900 dark:to-zinc-800 p-4">
       <div className="max-w-4xl mx-auto">
-        {/* 错误信息显示 */}
+        {/* 头部导航 */}
+        <div className="flex items-center justify-between mb-6">
+          <button
+            onClick={onBack}
+            className="flex items-center space-x-2 px-4 py-2 bg-white dark:bg-zinc-800 rounded-lg shadow-sm hover:shadow-md transition-shadow text-zinc-700 dark:text-zinc-200"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span>返回</span>
+          </button>
+          
+          <h1 className="text-xl font-semibold text-gray-800 dark:text-white">翻译结果</h1>
+          
+          <button
+            onClick={onRetake}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            重新拍照
+          </button>
+        </div>
+
+        {/* 错误信息 */}
         {errorMessage && (
-          <div className="mb-6 bg-red-900/30 border border-red-500/30 rounded-lg p-4">
-            <div className="flex items-center">
-              <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
+            <div className="flex items-start space-x-3">
+              <svg className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span className="text-red-300 font-medium">错误信息</span>
+              <div className="flex-1">
+                <h3 className="text-red-800 dark:text-red-200 font-medium">翻译失败</h3>
+                <p className="text-red-700 dark:text-red-300 text-sm mt-1">{errorMessage}</p>
+              </div>
             </div>
-            <p className="text-red-200 mt-2">{errorMessage}</p>
             <button
               onClick={onRetry}
-              className="mt-3 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors text-sm"
+              className="mt-4 w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
             >
-              重试
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>重试</span>
             </button>
           </div>
         )}
 
-        {/* PDF显示区域 */}
-        {!errorMessage && (
-          <div className="mb-8 bg-gray-800 rounded-lg overflow-hidden shadow-xl">
-            {imageLoading && !pdfBlobUrl && (
-              <div className="p-8 text-center text-gray-400">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
-                <p>Loading PDF...</p>
+        {/* 翻译结果图片 */}
+        {translatedImageUrl && !errorMessage && (
+          <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-lg overflow-hidden">
+            {/* 工具栏 */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900">
+              <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-300">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-sm font-medium">翻译完成</span>
               </div>
-            )}
-            {pdfBlobUrl && (
-              <div 
-                ref={outerContainerRef} 
-                className="relative w-full touch-manipulation" 
-                style={{ 
-                  touchAction: 'pan-y pinch-zoom',
-                  minHeight: '100vh',
-                  overflow: 'auto',
-                  display: 'block'
-                }}
-              >
-                {imageLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-700 z-10">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                    <span className="ml-2 text-gray-300">Loading...</span>
-                  </div>
+              
+              <div className="flex items-center space-x-2">
+                {/* 分享按钮（仅移动端显示） */}
+                {canShare && (
+                  <button
+                    onClick={handleShare}
+                    className="flex items-center space-x-1 px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                    <span>分享</span>
+                  </button>
                 )}
-                {imageError ? (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-700 text-gray-300 z-10">
-                    <div className="text-center">
-                      <svg className="mx-auto h-12 w-12 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                      </svg>
-                      <p>File loading failed</p>
-                      <button 
-                        onClick={handleReload}
-                        className="mt-2 text-blue-400 hover:text-blue-300 underline"
-                      >
-                        Reload
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-                    <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-                      <h3 className="text-lg font-semibold text-gray-800">PDF预览</h3>
-                      
-                      {/* 缩放控制区域 */}
-                      <div className="flex items-center space-x-3">
-                        <button
-                          onClick={() => setScale(prev => Math.max(prev - 0.2, 0.3))}
-                          className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                          title="缩小"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                          </svg>
-                        </button>
-                        
-                        <span className="text-sm font-medium text-gray-600 min-w-[60px] text-center">
-                          {Math.round(scale * 100)}%
-                        </span>
-                        
-                        <button
-                          onClick={() => setScale(prev => Math.min(prev + 0.2, 3.0))}
-                          className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                          title="放大"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                          </svg>
-                        </button>
-                        
-                        <button
-                          onClick={() => {
-                            if (containerWidth > 0 && pageWidth > 0) {
-                              const optimalScale = calculateOptimalScale(containerWidth, pageWidth);
-                              setScale(optimalScale);
-                            }
-                          }}
-                          className="px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm transition-colors"
-                          title="适应屏幕"
-                        >
-                          适应
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <div 
-                       ref={pdfContainerRef}
-                       className="relative overflow-auto" 
-                       style={{ 
-                         height: '70vh',
-                         touchAction: 'none'
-                       }}
-                     >
-                      <Document
-                        file={pdfBlobUrl}
-                        onLoadSuccess={onDocumentLoadSuccess}
-                        onLoadError={onDocumentLoadError}
-                        className="w-full" 
-                        loading={<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto my-4"></div>}
-                        options={{
-                          ...pdfOptions,
-                          isEvalSupported: false,
-                          disableAutoFetch: false,
-                          disableStream: false,
-                        }}
-                      >
-                        {Array.from(new Array(numPages), (el, index) => (
-                          <Page 
-                            key={`page_${index + 1}`}
-                            pageNumber={index + 1} 
-                            scale={scale}
-                            onLoadSuccess={index === 0 ? onPageLoadSuccess : undefined}
-                            renderTextLayer={false} 
-                            renderAnnotationLayer={true}
-                            className="mb-4 shadow-lg mx-auto"
-                          />
-                        ))}
-                      </Document>
-                    </div>
-                  </div>
-                )}
+
+                {/* 下载按钮 */}
+                <button
+                  onClick={handleDownload}
+                  className="flex items-center space-x-1 px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  <span>下载</span>
+                </button>
               </div>
-            )}
+            </div>
+
+            {/* 图片显示区域 */}
+            <div className="p-4">
+                <div className="flex justify-center">
+                  <img
+                  src={translatedImageUrl}
+                    alt="翻译结果"
+                  className="max-w-full h-auto rounded-lg shadow-sm border border-gray-200 dark:border-zinc-700"
+                    style={{ maxHeight: '70vh' }}
+                  onError={(e) => {
+                    console.error('图片加载失败');
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                </div>
+            </div>
+
+            {/* 底部操作区 */}
+            <div className="p-4 border-t border-gray-100 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={onRetake}
+                  className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>拍摄新照片</span>
+                </button>
+
+                <button
+                  onClick={onRetry}
+                  className="flex-1 px-4 py-3 bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-lg hover:bg-zinc-300 dark:hover:bg-zinc-600 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>重新翻译</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 无结果时的空状态 */}
+        {!translatedImageUrl && !errorMessage && (
+          <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-lg p-8 text-center">
+            <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p className="text-gray-500 dark:text-gray-400">暂无翻译结果</p>
+            <button
+              onClick={onRetake}
+              className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              拍摄照片
+            </button>
           </div>
         )}
       </div>
