@@ -5,6 +5,7 @@ import { useAuth, UserButton } from '@clerk/nextjs';
 import ResultsView from '../components/ResultsView';
 import LanguageSelector from '../components/LanguageSelector';
 import UpdatePrompt from '../components/UpdatePrompt';
+import BananaBackground from '../components/BananaBackground';
 import useServiceWorkerUpdate from '../hooks/useServiceWorkerUpdate';
 
 // 应用状态
@@ -207,6 +208,9 @@ export default function Home() {
   
   return (
     <main className="banana-page text-white">
+      {/* 背景图标网格 */}
+      <BananaBackground />
+      
       {/* 首页 - 选择功能 */}
       {appState === 'idle' && (
         <div className="flex flex-col items-center justify-center min-h-screen p-6 pb-32 text-center relative">

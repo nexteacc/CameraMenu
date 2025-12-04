@@ -288,25 +288,13 @@ video[controls] {
 }
 
 
-/* 动画 - 6个图标，3列2行布局 */
+/* 背景滚动动画 */
 @keyframes bananaScroll {
   0% {
-    background-position: 
-      0 0, 
-      150px 0, 
-      300px 0, 
-      0 150px, 
-      150px 150px, 
-      300px 150px;
+    transform: translate(0, 0);
   }
   100% {
-    background-position: 
-      150px 150px, 
-      300px 150px, 
-      450px 150px, 
-      150px 300px, 
-      300px 300px, 
-      450px 300px;
+    transform: translate(-400px, -300px);
   }
 }
 
@@ -314,65 +302,40 @@ video[controls] {
   position: relative;
   min-height: 100vh;
   overflow: hidden;
-  background-color: #FFFBEB; /* 温暖的奶油色 */
+  background-color: #FFFBEB;
   color: #0f172a;
 }
 
-/* 前6个图标层 - 图标1,2,3,4,5,6 (行1和行2) */
-.banana-page::before {
-  content: "";
+/* 背景容器 */
+.banana-bg-container {
   position: fixed;
   inset: 0;
-  background-image: 
-    url("/bananafood/1.png"),
-    url("/bananafood/2.png"),
-    url("/bananafood/3.png"),
-    url("/bananafood/4.png"),
-    url("/bananafood/5.png"),
-    url("/bananafood/6.png");
-  background-size: 150px 150px;
-  background-position: 
-    0 0, 
-    150px 0, 
-    300px 0, 
-    0 150px, 
-    150px 150px, 
-    300px 150px;
-  background-repeat: repeat;
-  opacity: 1;
-  animation: bananaScroll 10s linear infinite;
+  overflow: hidden;
   pointer-events: none;
   z-index: 0;
 }
 
-/* 后6个图标层 - 图标7,8,9,10,11,12 (行3和行4) */
-.banana-page::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image: 
-    url("/bananafood/7.png"),
-    url("/bananafood/8.png"),
-    url("/bananafood/9.png"),
-    url("/bananafood/10.png"),
-    url("/bananafood/11.png"),
-    url("/bananafood/12.png");
-  background-size: 150px 150px;
-  background-position: 
-    0 300px, 
-    150px 300px, 
-    300px 300px, 
-    0 450px, 
-    150px 450px, 
-    300px 450px;
-  background-repeat: repeat;
-  opacity: 1;
-  animation: bananaScroll 10s linear infinite;
-  pointer-events: none;
-  z-index: 0;
+/* 图标网格 - 4列3行，每个网格 400x300 */
+.banana-grid {
+  position: absolute;
+  display: grid;
+  grid-template-columns: repeat(4, 100px);
+  grid-template-rows: repeat(3, 100px);
+  gap: 0;
+  animation: bananaScroll 15s linear infinite;
+  opacity: 0.5;
 }
 
-.banana-page > * {
+/* 单个图标 */
+.banana-icon {
+  width: 100px;
+  height: 100px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.banana-page > *:not(.banana-bg-container) {
   position: relative;
   z-index: 1;
 }
