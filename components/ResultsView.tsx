@@ -65,13 +65,17 @@ const ResultsView = ({
     setShowActions(!showActions);
   };
 
-  // 检查是否支持分享功能
-  const canShare = typeof navigator !== 'undefined' && !!navigator.share;
+  // 检查是否支持分享/需要隐藏下载
+  const isClient = typeof navigator !== 'undefined';
+  const canShareApi = isClient && typeof navigator.share === 'function';
+  const isMobileDevice = isClient && /iPhone|iPad|Android/i.test(navigator.userAgent);
+  const shouldUseSystemSave = isMobileDevice && canShareApi;
+  const canShare = canShareApi;
 
   // 错误状态 - 显示错误信息和重试按钮
   if (errorMessage) {
     return (
-      <div className="fixed inset-0 z-50 bg-black/95 flex flex-col">
+      <div className="fixed inset-0 z-50 bg-zinc-900 flex flex-col">
         {/* 右上角关闭按钮 */}
         <div className="absolute top-4 right-4 z-10">
           <button
@@ -113,7 +117,7 @@ const ResultsView = ({
   // 成功状态 - 全屏沉浸式图片展示
   if (translatedImageUrl) {
     return (
-      <div className="fixed inset-0 z-50 bg-black/95 flex flex-col">
+      <div className="fixed inset-0 z-50 bg-zinc-900 flex flex-col">
         {/* 右上角关闭按钮 */}
         <div className="absolute top-4 right-4 z-10">
           <button
@@ -167,19 +171,22 @@ const ResultsView = ({
             </button>
           )}
 
-          {/* 下载按钮 */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDownload();
-            }}
-            className="p-3.5 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/30"
-            aria-label="Download"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-          </button>
+          {/* 下载按钮（桌面/不支持系统保存时显示） */}
+          {!shouldUseSystemSave && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDownload();
+              }}
+              className="p-3.5 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/30"
+              aria-label="Download"
+              title="下载图片"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+            </button>
+          )}
         </div>
 
         {/* 底部提示文字 - 点击图片后显示/隐藏 */}
@@ -198,7 +205,7 @@ const ResultsView = ({
 
   // 空状态 - 无结果
   return (
-    <div className="fixed inset-0 z-50 bg-black/95 flex flex-col">
+    <div className="fixed inset-0 z-50 bg-zinc-900 flex flex-col">
       {/* 右上角关闭按钮 */}
       <div className="absolute top-4 right-4 z-10">
         <button

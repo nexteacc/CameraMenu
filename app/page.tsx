@@ -400,7 +400,7 @@ export default function Home() {
             <h2 className="text-2xl font-semibold mb-3 text-white">
               {mode === 'translate' ? 'Translating...' : 'Recognizing...'}
             </h2>
-            <p className="text-zinc-500 text-sm mt-4">
+            <p className="text-white text-sm mt-4">
               Please wait...
             </p>
           </div>
