@@ -5,7 +5,6 @@ import { useAuth, UserButton } from '@clerk/nextjs';
 import ResultsView from '../components/ResultsView';
 import LanguageSelector from '../components/LanguageSelector';
 import UpdatePrompt from '../components/UpdatePrompt';
-import FloatingCards from '../components/FloatingCards';
 import useServiceWorkerUpdate from '../hooks/useServiceWorkerUpdate';
 
 // 应用状态
@@ -208,9 +207,6 @@ export default function Home() {
   
   return (
     <main className="banana-page text-white">
-      {/* 浮动卡片背景 */}
-      <FloatingCards />
-      
       {/* 首页 - 选择功能 */}
       {appState === 'idle' && (
         <div className="flex flex-col items-center justify-center min-h-screen p-6 pb-32 text-center relative">
@@ -227,7 +223,7 @@ export default function Home() {
           </div>
           
           {/* Glass Card Container */}
-          <div className="w-full max-w-md bg-white/70 dark:bg-black/60 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/40 dark:border-white/10 p-8 flex flex-col items-center gap-8">
+          <div className="w-full max-w-md bg-amber-50/80 dark:bg-black/60 backdrop-blur-lg rounded-3xl shadow-2xl border border-amber-200/50 dark:border-white/10 p-8 flex flex-col items-center gap-8">
             <h1 className="text-4xl font-bold text-zinc-900 dark:text-white drop-shadow-sm">BananaFood</h1>
 
             <div className="flex flex-col items-center gap-6 w-full">
@@ -319,7 +315,7 @@ export default function Home() {
           />
           
           {/* Glass Card Container */}
-          <div className="w-full max-w-md bg-white/70 dark:bg-black/60 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/40 dark:border-white/10 p-8 flex flex-col items-center">
+          <div className="w-full max-w-md bg-amber-50/80 dark:bg-black/60 backdrop-blur-lg rounded-3xl shadow-2xl border border-amber-200/50 dark:border-white/10 p-8 flex flex-col items-center">
             {/* 当前功能提示 */}
             <div className="mb-8 text-center">
               <p className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">

@@ -288,6 +288,15 @@ video[controls] {
 }
 
 
+@keyframes bananaScroll {
+  0% {
+    background-position: 0 0, 75px 75px;
+  }
+  100% {
+    background-position: 150px 150px, 225px 225px;
+  }
+}
+
 .banana-page {
   position: relative;
   min-height: 100vh;
@@ -296,8 +305,23 @@ video[controls] {
   color: #0f172a;
 }
 
-/* 排除第一个子元素（FloatingCards 背景），让其保持 fixed 定位 */
-.banana-page > *:not(:first-child) {
+.banana-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: 
+    url("/bananafood/1.png"),
+    url("/bananafood/2.png");
+  background-size: 150px 150px;
+  background-position: 0 0, 75px 75px;
+  background-repeat: repeat;
+  opacity: 1;
+  animation: bananaScroll 15s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.banana-page > * {
   position: relative;
   z-index: 1;
 }
