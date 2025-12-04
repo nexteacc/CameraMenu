@@ -72,10 +72,10 @@ const ResultsView = ({
   const shouldUseSystemSave = isMobileDevice && canShareApi;
   const canShare = canShareApi;
 
-  // 错误状态 - 显示错误信息和重试按钮
+  // 错误状态 - 显示错误信息和重试按钮（毛玻璃效果）
   if (errorMessage) {
     return (
-      <div className="fixed inset-0 z-50 bg-zinc-900 flex flex-col">
+      <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xl flex flex-col">
         {/* 右上角关闭按钮 */}
         <div className="absolute top-4 right-4 z-10">
           <button
@@ -114,10 +114,10 @@ const ResultsView = ({
     );
   }
 
-  // 成功状态 - 全屏沉浸式图片展示
+  // 成功状态 - 全屏沉浸式图片展示（毛玻璃效果）
   if (translatedImageUrl) {
     return (
-      <div className="fixed inset-0 z-50 bg-zinc-900 flex flex-col">
+      <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xl flex flex-col">
         {/* 右上角关闭按钮 */}
         <div className="absolute top-4 right-4 z-10">
           <button
@@ -133,13 +133,13 @@ const ResultsView = ({
 
         {/* 图片展示区域 - 点击切换操作按钮 */}
         <div 
-          className="flex-1 flex items-center justify-center p-4 cursor-pointer"
+          className="flex-1 flex items-center justify-center p-6 cursor-pointer"
           onClick={handleImageClick}
         >
           <img
             src={translatedImageUrl}
             alt="Result"
-            className="max-w-full max-h-full object-contain rounded-lg"
+            className="max-w-[90%] max-h-[80vh] object-contain rounded-2xl shadow-2xl"
             onError={(e) => {
               console.error('Image load failed');
               (e.target as HTMLImageElement).style.display = 'none';
@@ -203,9 +203,9 @@ const ResultsView = ({
     );
   }
 
-  // 空状态 - 无结果
+  // 空状态 - 无结果（毛玻璃效果）
   return (
-    <div className="fixed inset-0 z-50 bg-zinc-900 flex flex-col">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xl flex flex-col">
       {/* 右上角关闭按钮 */}
       <div className="absolute top-4 right-4 z-10">
         <button
