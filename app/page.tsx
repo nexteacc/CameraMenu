@@ -223,17 +223,17 @@ export default function Home() {
           </div>
           
           {/* Glass Card Container */}
-          <div className="w-full max-w-md bg-amber-50/80 dark:bg-black/60 backdrop-blur-lg rounded-3xl shadow-2xl border border-amber-200/50 dark:border-white/10 p-8 flex flex-col items-center gap-8">
-            <h1 className="text-4xl font-bold text-zinc-900 dark:text-white drop-shadow-sm">BananaFood</h1>
+          <div className="w-full max-w-md bg-amber-50/80 backdrop-blur-lg rounded-3xl shadow-2xl border border-amber-200/50 p-8 flex flex-col items-center gap-8">
+            <h1 className="text-4xl font-bold text-zinc-900 drop-shadow-sm">BananaFood</h1>
 
             <div className="flex flex-col items-center gap-6 w-full">
               {/* 语言选择器 */}
               <div className="flex flex-col items-center w-full">
-                <p className="mb-2 text-sm font-medium text-zinc-700 dark:text-zinc-200">Target Language</p>
+                <p className="mb-2 text-sm font-medium text-zinc-700">Target Language</p>
                 <LanguageSelector 
                   selectedLanguage={selectedTargetLanguage} 
                   onLanguageChange={handleTargetLanguageChange} 
-                  className="w-full max-w-xs shadow-sm"
+                  className="w-48 shadow-sm"
                 />
               </div>
               
@@ -261,7 +261,7 @@ export default function Home() {
                       />
                     </svg>
                   </button>
-                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Translate</span>
+                  <span className="text-sm font-medium text-zinc-700">Translate</span>
                 </div>
                 
                 {/* 识别食物按钮 */}
@@ -286,7 +286,7 @@ export default function Home() {
                       />
                     </svg>
                   </button>
-                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Recognize</span>
+                  <span className="text-sm font-medium text-zinc-700">Recognize</span>
                 </div>
               </div>
             </div>
@@ -315,14 +315,14 @@ export default function Home() {
           />
           
           {/* Glass Card Container */}
-          <div className="w-full max-w-md bg-amber-50/80 dark:bg-black/60 backdrop-blur-lg rounded-3xl shadow-2xl border border-amber-200/50 dark:border-white/10 p-8 flex flex-col items-center">
+          <div className="w-full max-w-md bg-amber-50/80 backdrop-blur-lg rounded-3xl shadow-2xl border border-amber-200/50 p-8 flex flex-col items-center">
             {/* 当前功能提示 */}
             <div className="mb-8 text-center">
-              <p className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">
+              <p className="text-2xl font-bold text-zinc-900 mb-2">
                 {mode === 'translate' ? 'Translate Menu' : 'Recognize Food'}
               </p>
-              <div className="inline-flex items-center px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
-                <span className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
+              <div className="inline-flex items-center px-3 py-1 rounded-full bg-zinc-100 border border-zinc-200">
+                <span className="text-sm font-medium text-zinc-600">
                   {mode === 'translate' 
                     ? `To: ${selectedTargetLanguage}` 
                     : `Label: ${selectedTargetLanguage}`}
@@ -360,7 +360,7 @@ export default function Home() {
                     />
                   </svg>
                 </button>
-                <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Camera</span>
+                <span className="text-sm font-medium text-zinc-600">Camera</span>
               </div>
               
               {/* 相册按钮 */}
@@ -385,14 +385,14 @@ export default function Home() {
                     />
                   </svg>
                 </button>
-                <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Gallery</span>
+                <span className="text-sm font-medium text-zinc-600">Gallery</span>
               </div>
             </div>
             
             {/* 返回按钮 */}
             <button
               onClick={handleBackToIdle}
-              className="px-6 py-2 text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 font-medium transition-colors flex items-center gap-2"
+              className="px-6 py-2 text-zinc-500 hover:text-zinc-800 font-medium transition-colors flex items-center gap-2"
               aria-label="Back"
             >
               <svg
@@ -418,17 +418,17 @@ export default function Home() {
       {/* 处理中状态 */}
       {appState === 'processing' && (
         <div className="flex flex-col items-center justify-center min-h-screen p-6 relative z-50">
-          <div className="text-center bg-white/80 dark:bg-black/70 backdrop-blur-xl rounded-3xl p-10 border border-white/40 shadow-2xl flex flex-col items-center gap-6 max-w-sm w-full">
+          <div className="text-center bg-amber-50/80 backdrop-blur-xl rounded-3xl p-10 border border-amber-200/50 shadow-2xl flex flex-col items-center gap-6 max-w-sm w-full">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-tr from-blue-500 to-emerald-500 rounded-full blur-lg opacity-50 animate-pulse"></div>
               <div className="relative inline-block animate-spin rounded-full h-16 w-16 border-4 border-zinc-200 border-t-blue-500 border-b-emerald-500 mb-2"></div>
             </div>
             
             <div>
-              <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">
+              <h2 className="text-2xl font-bold text-zinc-900 mb-2">
                 {mode === 'translate' ? 'Translating...' : 'Recognizing...'}
               </h2>
-              <p className="text-zinc-500 dark:text-zinc-400 text-sm font-medium">
+              <p className="text-zinc-500 text-sm font-medium">
                 Please wait while we process your image
               </p>
             </div>

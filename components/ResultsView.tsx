@@ -49,7 +49,7 @@ const ResultsView = ({
       const file = new File([blob], 'result.png', { type: 'image/png' });
 
       await navigator.share({
-        title: 'CameraMenu Result',
+        title: 'BananaFood Result',
         text: 'Check out my result',
         files: [file],
       });
@@ -136,15 +136,31 @@ const ResultsView = ({
           className="flex-1 flex items-center justify-center p-6 cursor-pointer"
           onClick={handleImageClick}
         >
-          <img
-            src={translatedImageUrl}
-            alt="Result"
-            className="max-w-[90%] max-h-[80vh] object-contain rounded-2xl shadow-2xl"
-            onError={(e) => {
-              console.error('Image load failed');
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
-          />
+          <div className="flex flex-col items-center">
+            <img
+              src={translatedImageUrl}
+              alt="Result"
+              className="max-w-full max-h-[70vh] object-contain rounded-2xl shadow-2xl"
+              onError={(e) => {
+                console.error('Image load failed');
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+            
+            {/* 重试按钮 - 始终显示 */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRetry();
+              }}
+              className="mt-6 px-6 py-3 bg-amber-500 text-white rounded-full font-medium hover:bg-amber-600 transition-colors shadow-lg shadow-amber-500/30 flex items-center space-x-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>Retry</span>
+            </button>
+          </div>
         </div>
 
         {/* 右下角操作按钮 - 点击图片后显示/隐藏 */}
