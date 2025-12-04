@@ -288,13 +288,14 @@ video[controls] {
 }
 
 
-/* 背景滚动动画 */
+/* 背景滚动动画 - 从左上到右下 */
 @keyframes bananaScroll {
   0% {
     transform: translate(0, 0);
   }
   100% {
-    transform: translate(-400px, -300px);
+    /* 移动一个完整网格的距离 */
+    transform: translate(420px, 560px);
   }
 }
 
@@ -302,7 +303,7 @@ video[controls] {
   position: relative;
   min-height: 100vh;
   overflow: hidden;
-  background-color: #FFFBEB;
+  background-color: #fffbeb;
   color: #0f172a;
 }
 
@@ -315,22 +316,22 @@ video[controls] {
   z-index: 0;
 }
 
-/* 图标网格 - 4列3行，每个网格 400x300 */
+/* 图标网格 - 3列4行，带间距 */
 .banana-grid {
   position: absolute;
   display: grid;
-  grid-template-columns: repeat(4, 100px);
-  grid-template-rows: repeat(3, 100px);
-  gap: 0;
+  grid-template-columns: repeat(3, 120px);
+  grid-template-rows: repeat(4, 120px);
+  gap: 20px;
   animation: bananaScroll 15s linear infinite;
-  opacity: 0.5;
+  opacity: 1;
 }
 
 /* 单个图标 */
 .banana-icon {
-  width: 100px;
-  height: 100px;
-  background-size: contain;
+  width: 120px;
+  height: 120px;
+  background-size: 90%;
   background-repeat: no-repeat;
   background-position: center;
 }
