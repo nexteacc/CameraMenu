@@ -288,53 +288,12 @@ video[controls] {
 }
 
 
-@keyframes bananaScroll {
-  0% {
-    background-position: 0 0, 60px 60px;
-  }
-  100% {
-    background-position: 120px 120px, 180px 180px;
-  }
-}
-
 .banana-page {
   position: relative;
   min-height: 100vh;
   overflow: hidden;
   background-color: #FFFBEB; /* 温暖的奶油色 */
   color: #0f172a;
-}
-
-.banana-page::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  /* 使用两个图层交错排列，形成密集网格 */
-  background-image: 
-    url("/bananafood/1.png"),
-    url("/bananafood/2.png");
-  
-  /* 缩小尺寸，形成纹理感 */
-  background-size: 120px 120px;
-  
-  /* 交错起始位置 */
-  background-position: 0 0, 60px 60px;
-  
-  background-repeat: repeat;
-  
-  /* 提高不透明度，清晰展示 */
-  opacity: 1;
-  
-  /* 慢速斜向滑动 */
-  animation: bananaScroll 60s linear infinite;
-  
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* 移除之前的暗色遮罩 */
-.banana-page::after {
-  display: none;
 }
 
 .banana-page > * {

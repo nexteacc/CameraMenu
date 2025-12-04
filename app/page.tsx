@@ -5,6 +5,7 @@ import { useAuth, UserButton } from '@clerk/nextjs';
 import ResultsView from '../components/ResultsView';
 import LanguageSelector from '../components/LanguageSelector';
 import UpdatePrompt from '../components/UpdatePrompt';
+import FloatingCards from '../components/FloatingCards';
 import useServiceWorkerUpdate from '../hooks/useServiceWorkerUpdate';
 
 // 应用状态
@@ -207,6 +208,9 @@ export default function Home() {
   
   return (
     <main className="banana-page text-white">
+      {/* 浮动卡片背景 */}
+      <FloatingCards />
+      
       {/* 首页 - 选择功能 */}
       {appState === 'idle' && (
         <div className="flex flex-col items-center justify-center min-h-screen p-6 pb-32 text-center relative">
