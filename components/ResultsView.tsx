@@ -75,7 +75,7 @@ const ResultsView = ({
   // 错误状态 - 显示错误信息和重试按钮（毛玻璃效果）
   if (errorMessage) {
     return (
-      <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xl flex flex-col">
+      <div style={{ position: 'fixed' }} className="inset-0 z-50 bg-black/60 backdrop-blur-xl flex flex-col">
         {/* 右上角关闭按钮 */}
         <div className="absolute top-4 right-4 z-10">
           <button
@@ -117,7 +117,7 @@ const ResultsView = ({
   // 成功状态 - 全屏沉浸式图片展示（毛玻璃效果）
   if (translatedImageUrl) {
     return (
-      <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xl flex flex-col">
+      <div style={{ position: 'fixed' }} className="inset-0 z-50 bg-black/60 backdrop-blur-xl flex flex-col">
         {/* 右上角关闭按钮 */}
         <div className="absolute top-4 right-4 z-10">
           <button
@@ -197,7 +197,7 @@ const ResultsView = ({
               : 'opacity-60'
           }`}
         >
-          <p className="text-white/60 text-sm">点击图片显示操作</p>
+          <p className="text-white/60 text-sm">Tap image for options</p>
         </div>
       </div>
     );
@@ -205,7 +205,7 @@ const ResultsView = ({
 
   // 空状态 - 无结果（毛玻璃效果）
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xl flex flex-col">
+    <div style={{ position: 'fixed' }} className="inset-0 z-50 bg-black/60 backdrop-blur-xl flex flex-col">
       {/* 右上角关闭按钮 */}
       <div className="absolute top-4 right-4 z-10">
         <button

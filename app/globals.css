@@ -296,7 +296,8 @@ video[controls] {
   color: #0f172a;
 }
 
-.banana-page > * {
+/* 排除第一个子元素（FloatingCards 背景），让其保持 fixed 定位 */
+.banana-page > *:not(:first-child) {
   position: relative;
   z-index: 1;
 }
