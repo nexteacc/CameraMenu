@@ -288,47 +288,36 @@ video[controls] {
 }
 
 
-/* 慢速动画 - 10秒循环 */
-@keyframes bananaScrollSlow {
+@keyframes bananaScroll {
   0% {
     background-position: 
       0 0, 
+      75px 150px, 
       150px 0, 
-      0 150px, 
-      150px 150px, 
+      225px 150px, 
       300px 0, 
-      300px 150px;
+      375px 150px, 
+      450px 0, 
+      525px 150px, 
+      600px 0, 
+      675px 150px, 
+      750px 0, 
+      825px 150px;
   }
   100% {
     background-position: 
       150px 150px, 
+      225px 300px, 
       300px 150px, 
-      150px 300px, 
-      300px 300px, 
+      375px 300px, 
       450px 150px, 
-      450px 300px;
-  }
-}
-
-/* 快速动画 - 5秒循环 */
-@keyframes bananaScrollFast {
-  0% {
-    background-position: 
-      75px 75px, 
-      225px 75px, 
-      75px 225px, 
-      225px 225px, 
-      375px 75px, 
-      375px 225px;
-  }
-  100% {
-    background-position: 
-      225px 225px, 
-      375px 225px, 
-      225px 375px, 
-      375px 375px, 
-      525px 225px, 
-      525px 375px;
+      525px 300px, 
+      600px 150px, 
+      675px 300px, 
+      750px 150px, 
+      825px 300px, 
+      900px 150px, 
+      975px 300px;
   }
 }
 
@@ -340,56 +329,40 @@ video[controls] {
   color: #0f172a;
 }
 
-/* 慢速层 - 奇数图标 (1,3,5,7,9,11) */
 .banana-page::before {
   content: "";
   position: fixed;
   inset: 0;
   background-image: 
     url("/bananafood/1.png"),
-    url("/bananafood/3.png"),
-    url("/bananafood/5.png"),
-    url("/bananafood/7.png"),
-    url("/bananafood/9.png"),
-    url("/bananafood/11.png");
-  background-size: 150px 150px;
-  background-position: 
-    0 0, 
-    150px 0, 
-    0 150px, 
-    150px 150px, 
-    300px 0, 
-    300px 150px;
-  background-repeat: repeat;
-  opacity: 1;
-  animation: bananaScrollSlow 10s linear infinite;
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* 快速层 - 偶数图标 (2,4,6,8,10,12) */
-.banana-page::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image: 
     url("/bananafood/2.png"),
+    url("/bananafood/3.png"),
     url("/bananafood/4.png"),
+    url("/bananafood/5.png"),
     url("/bananafood/6.png"),
+    url("/bananafood/7.png"),
     url("/bananafood/8.png"),
+    url("/bananafood/9.png"),
     url("/bananafood/10.png"),
+    url("/bananafood/11.png"),
     url("/bananafood/12.png");
   background-size: 150px 150px;
   background-position: 
-    75px 75px, 
-    225px 75px, 
-    75px 225px, 
-    225px 225px, 
-    375px 75px, 
-    375px 225px;
+    0 0, 
+    75px 150px, 
+    150px 0, 
+    225px 150px, 
+    300px 0, 
+    375px 150px, 
+    450px 0, 
+    525px 150px, 
+    600px 0, 
+    675px 150px, 
+    750px 0, 
+    825px 150px;
   background-repeat: repeat;
   opacity: 1;
-  animation: bananaScrollFast 5s linear infinite;
+  animation: bananaScroll 10s linear infinite;
   pointer-events: none;
   z-index: 0;
 }
