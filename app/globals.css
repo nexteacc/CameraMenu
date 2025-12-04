@@ -288,6 +288,7 @@ video[controls] {
 }
 
 
+/* 动画 - 6个图标，3列2行布局 */
 @keyframes bananaScroll {
   0% {
     background-position: 
@@ -296,13 +297,7 @@ video[controls] {
       300px 0, 
       0 150px, 
       150px 150px, 
-      300px 150px, 
-      0 300px, 
-      150px 300px, 
-      300px 300px, 
-      0 450px, 
-      150px 450px, 
-      300px 450px;
+      300px 150px;
   }
   100% {
     background-position: 
@@ -311,13 +306,7 @@ video[controls] {
       450px 150px, 
       150px 300px, 
       300px 300px, 
-      450px 300px, 
-      150px 450px, 
-      300px 450px, 
-      450px 450px, 
-      150px 600px, 
-      300px 600px, 
-      450px 600px;
+      450px 300px;
   }
 }
 
@@ -329,6 +318,7 @@ video[controls] {
   color: #0f172a;
 }
 
+/* 前6个图标层 - 图标1,2,3,4,5,6 (行1和行2) */
 .banana-page::before {
   content: "";
   position: fixed;
@@ -339,7 +329,28 @@ video[controls] {
     url("/bananafood/3.png"),
     url("/bananafood/4.png"),
     url("/bananafood/5.png"),
-    url("/bananafood/6.png"),
+    url("/bananafood/6.png");
+  background-size: 150px 150px;
+  background-position: 
+    0 0, 
+    150px 0, 
+    300px 0, 
+    0 150px, 
+    150px 150px, 
+    300px 150px;
+  background-repeat: repeat;
+  opacity: 1;
+  animation: bananaScroll 10s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 后6个图标层 - 图标7,8,9,10,11,12 (行3和行4) */
+.banana-page::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: 
     url("/bananafood/7.png"),
     url("/bananafood/8.png"),
     url("/bananafood/9.png"),
@@ -348,12 +359,6 @@ video[controls] {
     url("/bananafood/12.png");
   background-size: 150px 150px;
   background-position: 
-    0 0, 
-    150px 0, 
-    300px 0, 
-    0 150px, 
-    150px 150px, 
-    300px 150px, 
     0 300px, 
     150px 300px, 
     300px 300px, 
