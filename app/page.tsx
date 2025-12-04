@@ -4,7 +4,6 @@ import { useState, useRef } from 'react';
 import { useAuth, UserButton } from '@clerk/nextjs';
 import ResultsView from '../components/ResultsView';
 import LanguageSelector from '../components/LanguageSelector';
-import AuroraBackground from '../components/AuroraBackground';
 
 // 应用状态
 type AppState = 'idle' | 'select-source' | 'processing' | 'results';
@@ -204,7 +203,7 @@ export default function Home() {
   };
   
   return (
-    <AuroraBackground className="text-white">
+    <main className="banana-page text-white">
       {/* 首页 - 选择功能 */}
       {appState === 'idle' && (
         <div className="flex flex-col items-center justify-center min-h-screen p-6 pb-32 text-center relative">
@@ -417,6 +416,6 @@ export default function Home() {
           onRetry={handleRetry}
         />
       )}
-    </AuroraBackground>
+    </main>
   );
 }
