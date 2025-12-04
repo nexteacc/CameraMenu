@@ -4,6 +4,8 @@ import { useState, useRef } from 'react';
 import { useAuth, UserButton } from '@clerk/nextjs';
 import ResultsView from '../components/ResultsView';
 import LanguageSelector from '../components/LanguageSelector';
+import UpdatePrompt from '../components/UpdatePrompt';
+import useServiceWorkerUpdate from '../hooks/useServiceWorkerUpdate';
 
 // 应用状态
 type AppState = 'idle' | 'select-source' | 'processing' | 'results';
@@ -28,6 +30,7 @@ export default function Home() {
   
   // 认证
   const { getToken } = useAuth();
+  const { hasUpdate, isRefreshing, refreshApp } = useServiceWorkerUpdate();
   
   // 文件输入引用
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -416,6 +419,7 @@ export default function Home() {
           onRetry={handleRetry}
         />
       )}
+      <UpdatePrompt open={hasUpdate} isRefreshing={isRefreshing} onReload={refreshApp} />
     </main>
   );
 }
