@@ -233,7 +233,7 @@ export default function Home() {
             <div className="flex flex-col items-center gap-6 w-full">
               {/* 语言选择器 */}
               <div className="flex flex-col items-center w-full">
-                <p className="mb-2 text-sm font-medium text-zinc-700">Target Language</p>
+                <p className="mb-2 text-sm font-medium text-zinc-700">To</p>
                 <LanguageSelector 
                   selectedLanguage={selectedTargetLanguage} 
                   onLanguageChange={handleTargetLanguageChange} 
@@ -433,7 +433,7 @@ export default function Home() {
                 {mode === 'translate' ? 'Translating...' : 'Recognizing...'}
               </h2>
               <p className="text-zinc-500 text-sm font-medium">
-                Please wait while we process your image
+                Please wait...
               </p>
             </div>
           </div>
