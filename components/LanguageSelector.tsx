@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { cn } from "../lib/utils";
 import { ChevronDown, Check } from "lucide-react";
-import LiquidGlass from 'liquid-glass-react';
 
 interface LanguageSelectorProps {
   selectedLanguage: string;
@@ -75,41 +74,28 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
       )}
       
       {/* Trigger Button */}
-      <LiquidGlass
-        displacementScale={80}
-        blurAmount={0.25}
-        saturation={150}
-        aberrationIntensity={3}
-        elasticity={0}
-        cornerRadius={999}
-        padding="0"
-        mode="standard"
-        overLight={true}
-        className="w-full"
-        style={{ display: 'block', width: '100%' }}
+      <button
+        onClick={() => !disabled && !loading && setOpen((o) => !o)}
+        disabled={disabled || loading}
+        className={cn(
+          "flex items-center justify-between gap-2 w-full rounded-full border px-4 py-2 text-sm font-medium transition-all",
+          "bg-white/90 backdrop-blur-sm shadow-lg",
+          "border-zinc-200/50",
+          "text-zinc-800",
+          "hover:bg-white hover:border-zinc-300 hover:shadow-xl",
+          "active:scale-[0.98]",
+          disabled || loading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+        )}
       >
-        <button
-          onClick={() => !disabled && !loading && setOpen((o) => !o)}
-          disabled={disabled || loading}
-          className={cn(
-            "flex items-center justify-between gap-2 w-full rounded-full border px-4 py-2 text-sm font-medium transition-all",
-            "bg-transparent shadow-sm",
-            "border-zinc-200/50",
-            "text-zinc-800",
-            "hover:border-zinc-300",
-            disabled || loading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-          )}
-        >
-          <div className="flex items-center gap-2">
-            <span className="text-lg">{selectedLang.flag}</span>
-            <span>{loading ? 'Loading...' : selectedLang.name}</span>
-          </div>
-          <ChevronDown className={cn(
-            "h-4 w-4 transition-transform",
-            open && "rotate-180"
-          )} />
-        </button>
-      </LiquidGlass>
+        <div className="flex items-center gap-2">
+          <span className="text-lg">{selectedLang.flag}</span>
+          <span>{loading ? 'Loading...' : selectedLang.name}</span>
+        </div>
+        <ChevronDown className={cn(
+          "h-4 w-4 transition-transform",
+          open && "rotate-180"
+        )} />
+      </button>
 
       {/* Dropdown Menu */}
       {open && !disabled && !loading && (
