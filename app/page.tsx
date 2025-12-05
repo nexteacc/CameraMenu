@@ -292,7 +292,7 @@ export default function Home() {
           </div>
           
           {/* 底部链接 - 隐私政策和服务条款 */}
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-3 text-xs text-zinc-400">
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-1.5 text-xs text-zinc-400">
             <Link 
               href="/privacy" 
               className="hover:text-zinc-600 transition-colors"
