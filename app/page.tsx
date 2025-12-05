@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useAuth, UserButton } from '@clerk/nextjs';
+import Link from 'next/link';
 import ResultsView from '../components/ResultsView';
 import LanguageSelector from '../components/LanguageSelector';
 import UpdatePrompt from '../components/UpdatePrompt';
@@ -288,6 +289,23 @@ export default function Home() {
                 </button>
               </div>
             </div>
+          </div>
+          
+          {/* 底部链接 - 隐私政策和服务条款 */}
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-3 text-xs text-zinc-400">
+            <Link 
+              href="/privacy" 
+              className="hover:text-zinc-600 transition-colors"
+            >
+              Privacy Policy
+            </Link>
+            <span className="text-zinc-400">•</span>
+            <Link 
+              href="/terms" 
+              className="hover:text-zinc-600 transition-colors"
+            >
+              Terms of Service
+            </Link>
           </div>
         </div>
       )}
