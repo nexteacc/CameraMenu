@@ -233,7 +233,7 @@ export default function Home() {
             blurAmount={0.3}
             saturation={160}
             aberrationIntensity={4}
-            elasticity={0.5}
+            elasticity={0}
             cornerRadius={24}
             padding="32px"
             mode="prominent"
@@ -336,7 +336,7 @@ export default function Home() {
             blurAmount={0.3}
             saturation={160}
             aberrationIntensity={4}
-            elasticity={0.5}
+            elasticity={0}
             cornerRadius={24}
             padding="32px"
             mode="prominent"
@@ -450,7 +450,7 @@ export default function Home() {
             blurAmount={0.3}
             saturation={160}
             aberrationIntensity={4}
-            elasticity={0.5}
+            elasticity={0}
             cornerRadius={24}
             padding="40px"
             mode="prominent"
