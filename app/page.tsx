@@ -265,7 +265,6 @@ export default function Home() {
                       />
                     </svg>
                   </button>
-                  <span className="text-sm font-medium text-zinc-700">Translate</span>
                 </div>
                 
                 {/* 识别食物按钮 */}
@@ -290,7 +289,6 @@ export default function Home() {
                       />
                     </svg>
                   </button>
-                  <span className="text-sm font-medium text-zinc-700">Recognize</span>
                 </div>
               </div>
             </div>
@@ -364,7 +362,6 @@ export default function Home() {
                     />
                   </svg>
                 </button>
-                <span className="text-sm font-medium text-zinc-600">Camera</span>
               </div>
               
               {/* 相册按钮 */}
@@ -389,7 +386,6 @@ export default function Home() {
                     />
                   </svg>
                 </button>
-                <span className="text-sm font-medium text-zinc-600">Gallery</span>
               </div>
             </div>
             
