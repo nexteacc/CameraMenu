@@ -300,11 +300,19 @@ video[controls] {
 }
 
 .banana-page {
-  position: relative;
-  min-height: 100vh;
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  height: 100vh; /* fallback for older browsers */
   overflow: hidden;
   background-color: #fffbeb;
   color: #0f172a;
+}
+
+@supports (height: 100dvh) {
+  .banana-page {
+    height: 100dvh;
+  }
 }
 
 /* 背景容器 */

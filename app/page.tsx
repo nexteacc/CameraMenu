@@ -213,7 +213,7 @@ export default function Home() {
       
       {/* 首页 - 选择功能 */}
       {appState === 'idle' && (
-        <div className="flex flex-col items-center justify-center min-h-screen p-6 pb-32 text-center relative">
+        <div className="flex flex-col items-center justify-center h-full p-6 text-center relative">
           {/* 右上角用户按钮 */}
           <div className="absolute top-4 right-4 z-20">
             <UserButton 
@@ -233,11 +233,13 @@ export default function Home() {
             <div className="flex flex-col items-center gap-6 w-full">
               {/* 语言选择器 */}
               <p className="mb-2 text-sm font-medium text-zinc-700">To</p>
-              <LanguageSelector 
-                selectedLanguage={selectedTargetLanguage} 
-                onLanguageChange={handleTargetLanguageChange} 
-                className="w-48 shadow-sm"
-              />
+              <div className="w-full flex justify-center">
+                <LanguageSelector 
+                  selectedLanguage={selectedTargetLanguage} 
+                  onLanguageChange={handleTargetLanguageChange} 
+                  className="w-48 shadow-sm"
+                />
+              </div>
               
               {/* 功能按钮 */}
               <div className="flex items-center gap-8 mt-4">
@@ -290,7 +292,7 @@ export default function Home() {
       
       {/* 选择来源页面 */}
       {appState === 'select-source' && (
-        <div className="flex flex-col items-center justify-center min-h-screen p-6 pb-32 text-center relative">
+        <div className="flex flex-col items-center justify-center h-full p-6 text-center relative">
           {/* 隐藏的文件输入 */}
           <input
             ref={cameraInputRef}
@@ -403,7 +405,7 @@ export default function Home() {
       
       {/* 处理中状态 */}
       {appState === 'processing' && (
-        <div className="flex flex-col items-center justify-center min-h-screen p-6 relative z-50">
+        <div className="flex flex-col items-center justify-center h-full p-6 relative z-50">
           <div className="text-center bg-amber-50/80 backdrop-blur-xl rounded-3xl p-10 border border-amber-200/50 shadow-2xl flex flex-col items-center gap-6 max-w-sm w-full">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-tr from-blue-500 to-emerald-500 rounded-full blur-lg opacity-50 animate-pulse"></div>
