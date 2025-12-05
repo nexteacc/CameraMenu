@@ -67,7 +67,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   }, [open]);
 
   return (
-    <div className={cn("relative block mx-auto", className)} ref={dropdownRef}>
+    <div className={cn("relative block mx-auto self-center", className)} ref={dropdownRef}>
       {label && (
         <label className="block text-sm font-medium text-zinc-700 mb-2">
           {label}
