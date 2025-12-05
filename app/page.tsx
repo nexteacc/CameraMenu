@@ -228,19 +228,20 @@ export default function Home() {
           </div>
           
           {/* Glass Card Container */}
-          <LiquidGlass
-            displacementScale={100}
-            blurAmount={0.3}
-            saturation={160}
-            aberrationIntensity={4}
-            elasticity={0}
-            cornerRadius={24}
-            padding="32px"
-            mode="prominent"
-            overLight={true}
-            className="w-full max-w-md"
-          >
-            <div className="flex flex-col items-center gap-8">
+          <div className="w-full max-w-md shadow-2xl">
+            <LiquidGlass
+              displacementScale={100}
+              blurAmount={0.3}
+              saturation={160}
+              aberrationIntensity={4}
+              elasticity={0}
+              cornerRadius={24}
+              padding="32px"
+              mode="prominent"
+              overLight={true}
+              className="w-full border border-amber-200/50"
+            >
+              <div className="flex flex-col items-center gap-8">
               <h1 className="text-4xl font-bold text-zinc-900 drop-shadow-sm">BananaFood</h1>
 
               <div className="flex flex-col items-center gap-6 w-full">
@@ -306,7 +307,8 @@ export default function Home() {
                 </div>
               </div>
             </div>
-          </LiquidGlass>
+            </LiquidGlass>
+          </div>
         </div>
       )}
       
@@ -331,19 +333,20 @@ export default function Home() {
           />
           
           {/* Glass Card Container */}
-          <LiquidGlass
-            displacementScale={100}
-            blurAmount={0.3}
-            saturation={160}
-            aberrationIntensity={4}
-            elasticity={0}
-            cornerRadius={24}
-            padding="32px"
-            mode="prominent"
-            overLight={true}
-            className="w-full max-w-md"
-          >
-            <div className="flex flex-col items-center">
+          <div className="w-full max-w-md shadow-2xl">
+            <LiquidGlass
+              displacementScale={100}
+              blurAmount={0.3}
+              saturation={160}
+              aberrationIntensity={4}
+              elasticity={0}
+              cornerRadius={24}
+              padding="32px"
+              mode="prominent"
+              overLight={true}
+              className="w-full border border-amber-200/50"
+            >
+              <div className="flex flex-col items-center">
               {/* 当前功能提示 */}
               <div className="mb-8 text-center">
                 <p className="text-2xl font-bold text-zinc-900 mb-2">
@@ -438,26 +441,28 @@ export default function Home() {
                 <span>Back</span>
               </button>
             </div>
-          </LiquidGlass>
+            </LiquidGlass>
+          </div>
         </div>
       )}
       
       {/* 处理中状态 */}
       {appState === 'processing' && (
         <div className="flex flex-col items-center justify-center min-h-screen p-6 relative z-50">
-          <LiquidGlass
-            displacementScale={100}
-            blurAmount={0.3}
-            saturation={160}
-            aberrationIntensity={4}
-            elasticity={0}
-            cornerRadius={24}
-            padding="40px"
-            mode="prominent"
-            overLight={true}
-            className="max-w-sm w-full"
-          >
-            <div className="text-center flex flex-col items-center gap-6">
+          <div className="max-w-sm w-full shadow-2xl">
+            <LiquidGlass
+              displacementScale={100}
+              blurAmount={0.3}
+              saturation={160}
+              aberrationIntensity={4}
+              elasticity={0}
+              cornerRadius={24}
+              padding="40px"
+              mode="prominent"
+              overLight={true}
+              className="w-full border border-amber-200/50"
+            >
+              <div className="text-center flex flex-col items-center gap-6">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-tr from-blue-500 to-emerald-500 rounded-full blur-lg opacity-50 animate-pulse"></div>
                 <div className="relative inline-block animate-spin rounded-full h-16 w-16 border-4 border-zinc-200 border-t-blue-500 border-b-emerald-500 mb-2"></div>
@@ -472,7 +477,8 @@ export default function Home() {
                 </p>
               </div>
             </div>
-          </LiquidGlass>
+            </LiquidGlass>
+          </div>
         </div>
       )}
       
