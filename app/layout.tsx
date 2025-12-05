@@ -2,10 +2,13 @@ import './globals.css';
 import { Providers } from './providers';
 import type { Metadata, Viewport } from 'next';
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bananafood.app';
+
 export const metadata: Metadata = {
   title: 'BananaFood',
   description: 'Snap, translate, eat - AI-powered menu translation & food recognition',
   manifest: '/manifest.json',
+  metadataBase: new URL(siteUrl),
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
