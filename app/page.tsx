@@ -234,11 +234,13 @@ export default function Home() {
               {/* 语言选择器 */}
               <p className="mb-2 text-sm font-medium text-zinc-700">To</p>
               <div className="w-full flex justify-center">
-                <LanguageSelector 
-                  selectedLanguage={selectedTargetLanguage} 
-                  onLanguageChange={handleTargetLanguageChange} 
-                  className="w-48 shadow-sm"
-                />
+                <div className="w-48">
+                  <LanguageSelector 
+                    selectedLanguage={selectedTargetLanguage} 
+                    onLanguageChange={handleTargetLanguageChange} 
+                    className="shadow-sm"
+                  />
+                </div>
               </div>
               
               {/* 功能按钮 */}

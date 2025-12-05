@@ -85,6 +85,8 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         padding="0"
         mode="standard"
         overLight={true}
+        className="w-full"
+        style={{ display: 'block', width: '100%' }}
       >
         <button
           onClick={() => !disabled && !loading && setOpen((o) => !o)}
