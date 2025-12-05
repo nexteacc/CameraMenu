@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 interface ResultsViewProps {
   onRetake: () => void;
@@ -22,6 +23,13 @@ const ResultsView = ({
 }: ResultsViewProps) => {
   // 控制操作按钮的显示/隐藏
   const [showActions, setShowActions] = useState(false);
+  // 控制图片加载错误状态
+  const [hasError, setHasError] = useState(false);
+
+  // 当图片 URL 变化时重置错误状态
+  useEffect(() => {
+    setHasError(false);
+  }, [translatedImageUrl]);
 
   /**
    * 下载图片
@@ -137,15 +145,21 @@ const ResultsView = ({
           onClick={handleImageClick}
         >
           <div className="flex flex-col items-center">
-            <img
-              src={translatedImageUrl}
-              alt="Result"
-              className="max-w-full max-h-[70vh] object-contain rounded-2xl shadow-2xl"
-              onError={(e) => {
-                console.error('Image load failed');
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
+            <div className="relative max-w-full max-h-[70vh] w-full h-[70vh]">
+              {!hasError && (
+                <Image
+                  src={translatedImageUrl}
+                  alt="Result"
+                  fill
+                  className="object-contain rounded-2xl shadow-2xl"
+                  unoptimized
+                  onError={() => {
+                    console.error('Image load failed');
+                    setHasError(true);
+                  }}
+                />
+              )}
+            </div>
             
             {/* 重试按钮 - 始终显示 */}
             <button
