@@ -10,6 +10,19 @@ export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-amber-100 p-6">
       <div className="max-w-3xl mx-auto bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 md:p-12">
+        {/* 返回按钮 - 固定在顶部 */}
+        <div className="sticky top-0 z-10 -mt-2 -mx-4 md:-mx-12 mb-6 pb-4 bg-white/80 backdrop-blur-sm">
+          <Link 
+            href="/" 
+            className="inline-flex items-center gap-2 text-sm text-zinc-600 hover:text-zinc-900 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span>Back to Home</span>
+          </Link>
+        </div>
+        
         <h1 className="text-3xl font-bold text-zinc-900 mb-2">Privacy Policy</h1>
         <p className="text-sm text-zinc-500 mb-8">Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
 
@@ -81,15 +94,6 @@ export default function PrivacyPolicy() {
             <h2 className="text-xl font-semibold text-zinc-900 mt-6 mb-3">8. Contact Us</h2>
             <p>If you have any questions about this Privacy Policy, please contact us at <a href="mailto:nextbigtoy@gmail.com" className="text-blue-600 hover:underline">nextbigtoy@gmail.com</a>.</p>
           </section>
-        </div>
-
-        <div className="mt-8 pt-6 border-t border-zinc-200">
-          <Link 
-            href="/" 
-            className="text-blue-600 hover:underline text-sm"
-          >
-            ← Back to Home
-          </Link>
         </div>
       </div>
     </div>
