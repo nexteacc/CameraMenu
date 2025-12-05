@@ -3,7 +3,7 @@
 .env.local
 .env
 .claude/*
-
+.pnpm-store/*
 
 # dependencies
 /node_modules

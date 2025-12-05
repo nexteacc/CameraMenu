@@ -1,5 +1,6 @@
 import './globals.css';
 import { Providers } from './providers';
+import { Analytics } from '@vercel/analytics/react';
 import type { Metadata, Viewport } from 'next';
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bananafood.app';
@@ -41,6 +42,7 @@ export default function RootLayout({
       <body>
         <Providers>
           {children}
+          <Analytics />
         </Providers>
       </body>
     </html>
