@@ -91,7 +91,7 @@ export default function TermsOfService() {
 
           <section>
             <h2 className="text-xl font-semibold text-zinc-900 mt-6 mb-3">11. Contact Us</h2>
-            <p>If you have any questions about these Terms of Service, please contact us through your account settings or by visiting our support page.</p>
+            <p>If you have any questions about these Terms of Service, please contact us at <a href="mailto:nextbigtoy@gmail.com" className="text-blue-600 hover:underline">nextbigtoy@gmail.com</a>.</p>
           </section>
         </div>
 
