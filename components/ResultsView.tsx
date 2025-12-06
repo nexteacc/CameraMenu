@@ -85,6 +85,9 @@ const ResultsView = ({
   const isMobileDevice = isClient && /iPhone|iPad|Android/i.test(navigator.userAgent);
   const shouldUseSystemSave = isMobileDevice && canShareApi;
   const canShare = canShareApi;
+  const displayFoodList = foodList && foodList.length > 0
+    ? foodList
+    : ['coconut', 'bread', 'chocolate', 'almond', 'raisin'];
   const handleFoodSelect = (name: string) => {
     // 占位交互：后续可接入科普请求
     alert(`即将提供科普：${name}`);
@@ -147,6 +150,17 @@ const ResultsView = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
+        </div>
+
+        {/* 顶部提示文字 - 放在图片容器之外，避免遮挡；点击后淡出 */}
+        <div 
+          className={`absolute top-10 left-0 right-0 text-center transition-all duration-300 pointer-events-none ${
+            showActions 
+              ? 'opacity-0' 
+              : 'opacity-70'
+          }`}
+        >
+          <p className="text-amber-300 text-sm drop-shadow">Tap image for options</p>
         </div>
 
         {/* 图片展示区域 - 点击切换操作按钮 */}
@@ -239,21 +253,10 @@ const ResultsView = ({
 
         {/* 右侧食物列表抽屉 - 点击图片后显示/隐藏 */}
         <FoodListDrawer
-          foodList={foodList}
+          foodList={displayFoodList}
           open={showActions}
           onSelect={handleFoodSelect}
         />
-
-        {/* 顶部提示文字 - 点击图片后显示/隐藏 */}
-        <div 
-          className={`absolute top-16 left-0 right-0 text-center transition-all duration-300 ${
-            showActions 
-              ? 'opacity-0' 
-              : 'opacity-60'
-          }`}
-        >
-          <p className="text-white/60 text-sm">Tap image for options</p>
-        </div>
       </div>
     );
   }
