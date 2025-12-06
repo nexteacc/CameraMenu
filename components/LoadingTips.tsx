@@ -85,11 +85,11 @@ const LoadingTips: React.FC = () => {
     { text: 'Anthony Bourdain traveled the world sharing food stories that connected cultures', type: 'people' },
   ];
 
-  // 文字旋转效果 - 每3秒切换一次
+  // 文字旋转效果 - 每2.5秒切换一次
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % tips.length);
-    }, 3000);
+    }, 2500);
 
     return () => clearInterval(interval);
   }, [tips.length]);

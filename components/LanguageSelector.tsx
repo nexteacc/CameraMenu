@@ -16,17 +16,17 @@ interface LanguageSelectorProps {
 
 const SUPPORTED_LANGUAGES = [
   { code: 'en', name: 'English', flag: '🇺🇸' },
-  { code: 'vi', name: 'Vietnamese', flag: '🇻🇳' },
-  { code: 'zh', name: 'Simplified Chinese', flag: '🇨🇳' },
-  { code: 'th', name: 'Thai', flag: '🇹🇭' },
-  { code: 'ko', name: 'Korean', flag: '🇰🇷' },
-  { code: 'ja', name: 'Japanese', flag: '🇯🇵' },
-  { code: 'es', name: 'Spanish', flag: '🇪🇸' },
-  { code: 'fr', name: 'French', flag: '🇫🇷' },
-  { code: 'de', name: 'German', flag: '🇩🇪' },
-  { code: 'it', name: 'Italian', flag: '🇮🇹' },
-  { code: 'ar', name: 'Arabic', flag: '🇸🇦' },
-  { code: 'ru', name: 'Russian', flag: '🇷🇺' },
+  { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },
+  { code: 'zh', name: '简体中文', flag: '🇨🇳' },
+  { code: 'th', name: 'ไทย', flag: '🇹🇭' },
+  { code: 'ko', name: '한국어', flag: '🇰🇷' },
+  { code: 'ja', name: '日本語', flag: '🇯🇵' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+  { code: 'it', name: 'Italiano', flag: '🇮🇹' },
+  { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+  { code: 'ru', name: 'Русский', flag: '🇷🇺' },
 ];
 
 export const getLanguageCode = (name: string): string => {
