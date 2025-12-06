@@ -439,9 +439,6 @@ export default function Home() {
             </div>
             
             <div>
-              <h2 className="text-2xl font-bold text-zinc-900 mb-2">
-                {mode === 'translate' ? 'Translating...' : 'Recognizing...'}
-              </h2>
               <p className="text-zinc-500 text-sm font-medium">
                 Please wait...
               </p>

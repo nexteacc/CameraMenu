@@ -102,7 +102,7 @@ const LoadingTips: React.FC = () => {
             <div
               key={`${tip.text}-${index}`}
               onClick={() => handleTipClick(tip, index)}
-              className="text-sm font-medium text-zinc-500 h-5 flex items-center whitespace-nowrap cursor-pointer hover:text-zinc-700 transition-colors"
+              className="loading-tip-item text-sm font-medium text-zinc-500 h-5 flex items-center whitespace-nowrap cursor-pointer hover:text-zinc-700 transition-colors"
             >
               {tip.text}
             </div>
