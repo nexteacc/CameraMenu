@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import { useAuth, UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
 import ResultsView from '../components/ResultsView';
-import LanguageSelector from '../components/LanguageSelector';
+import LanguageSelector, { getLanguageCode } from '../components/LanguageSelector';
 import UpdatePrompt from '../components/UpdatePrompt';
 import BananaBackground from '../components/BananaBackground';
 import LoadingTips from '../components/LoadingTips';
@@ -212,6 +212,8 @@ export default function Home() {
   const handleTargetLanguageChange = (languageName: string) => {
     setSelectedTargetLanguage(languageName);
   };
+
+  const targetLanguageCode = getLanguageCode(selectedTargetLanguage);
   
   return (
     <main className="banana-page text-white">
@@ -445,7 +447,7 @@ export default function Home() {
             </div>
             
             {/* 滚动字幕提示 */}
-            <LoadingTips />
+            <LoadingTips targetLanguage={targetLanguageCode} />
           </div>
         </div>
       )}
