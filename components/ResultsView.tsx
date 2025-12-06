@@ -25,10 +25,13 @@ const ResultsView = ({
   const [showActions, setShowActions] = useState(false);
   // 控制图片加载错误状态
   const [hasError, setHasError] = useState(false);
+  // 记录图片宽高比，用于自适应高度
+  const [imageRatio, setImageRatio] = useState<number | null>(null);
 
   // 当图片 URL 变化时重置错误状态
   useEffect(() => {
     setHasError(false);
+    setImageRatio(null);
   }, [translatedImageUrl]);
 
   /**
@@ -145,7 +148,10 @@ const ResultsView = ({
           onClick={handleImageClick}
         >
           <div className="flex flex-col items-center">
-            <div className="relative max-w-full max-h-[70vh] w-full h-[70vh]">
+            <div
+              className="relative w-[95vw] max-w-[95vw] max-h-[90vh] overflow-hidden"
+              style={{ aspectRatio: imageRatio ? `${imageRatio} / 1` : '3 / 4' }}
+            >
               {!hasError && (
                 <Image
                   src={translatedImageUrl}
@@ -153,6 +159,11 @@ const ResultsView = ({
                   fill
                   className="object-contain rounded-2xl shadow-2xl"
                   unoptimized
+                  onLoadingComplete={({ naturalWidth, naturalHeight }) => {
+                    if (naturalWidth && naturalHeight) {
+                      setImageRatio(naturalWidth / naturalHeight);
+                    }
+                  }}
                   onError={() => {
                     console.error('Image load failed');
                     setHasError(true);
