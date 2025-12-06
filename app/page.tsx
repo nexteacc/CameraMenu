@@ -26,6 +26,7 @@ export default function Home() {
   // 处理结果
   const [resultImageUrl, setResultImageUrl] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [foodList, setFoodList] = useState<string[]>([]);
   
   // 保存最后一次拍摄的图片用于重试
   const [lastCapturedImage, setLastCapturedImage] = useState<File | null>(null);
@@ -45,6 +46,7 @@ export default function Home() {
     setAppState('idle');
     setErrorMessage('');
     setResultImageUrl('');
+    setFoodList([]);
   };
   
   /**
@@ -145,6 +147,7 @@ export default function Home() {
     try {
       setLastCapturedImage(imageFile);
       setErrorMessage('');
+      setFoodList([]);
       setAppState('processing');
 
       const [token, compressedImage] = await Promise.all([
@@ -181,12 +184,14 @@ export default function Home() {
       }
 
       setResultImageUrl(result.imageDataUrl);
+      setFoodList(Array.isArray(result.foodList) ? result.foodList : []);
       setErrorMessage('');
       setAppState('results');
       
     } catch (error) {
       console.error('处理错误:', error);
       setErrorMessage((error as Error).message || 'Error processing image');
+      setFoodList([]);
       setAppState('results');
     }
   };
@@ -449,6 +454,7 @@ export default function Home() {
         <ResultsView 
           errorMessage={errorMessage}
           translatedImageUrl={resultImageUrl}
+          foodList={foodList}
           onRetake={() => setAppState('select-source')}
           onBack={handleExit}
           onRetry={handleRetry}

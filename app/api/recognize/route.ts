@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
 
     console.log('图片处理完成，大小:', imageBuffer.byteLength, 'bytes');
 
-    // 构建食物识别提示词
+    // 构建食物识别提示词：要求返回标注后的图片 + 仅名称的 JSON 数组
     const prompt = `You are a food recognition assistant.
 
 ## Task
@@ -119,7 +119,9 @@ Identify all food items in this image and add ${toLang} labels.
 - Do not overlap labels with each other
 - If the same type of food appears multiple times, label it only once
 
-Please generate the labeled image.`;
+## Output
+- Generate the labeled image.
+- Also return ONLY a JSON array (no markdown, no extra text) of food names in ${toLang}.`;
 
     console.log('正在调用 Gemini API 进行食物识别...');
 
@@ -183,7 +185,7 @@ Please generate the labeled image.`;
         console.log('找到生成的标注图片');
       } else if (part.text) {
         textResponse = part.text;
-        console.log('文字响应:', textResponse?.substring(0, 100));
+        console.log('文字响应:', textResponse?.substring(0, 120));
       }
     }
 
@@ -204,11 +206,35 @@ Please generate the labeled image.`;
 
     console.log('食物识别完成，返回结果');
 
+    // 解析文字响应为食物列表（若失败则为空数组，不影响图片）
+    const parseFoodList = (text: string | null): string[] => {
+      if (!text) return [];
+      try {
+        // 去掉可能的 ```json 包裹
+        const cleaned = text
+          .replace(/```json/gi, '')
+          .replace(/```/g, '')
+          .trim();
+        const parsed = JSON.parse(cleaned);
+        if (Array.isArray(parsed)) {
+          return parsed
+            .map((item) => (typeof item === 'string' ? item.trim() : ''))
+            .filter((v) => v);
+        }
+      } catch (err) {
+        console.warn('解析食物列表失败，返回空数组', err);
+      }
+      return [];
+    };
+
+    const foodList = parseFoodList(textResponse);
+
     return setCORSHeaders(
       NextResponse.json({
         success: true,
         imageDataUrl,
         textResponse,
+        foodList,
       })
     );
 

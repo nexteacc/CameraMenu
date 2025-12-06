@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import FoodListDrawer from './FoodListDrawer';
 
 interface ResultsViewProps {
   onRetake: () => void;
@@ -9,6 +10,7 @@ interface ResultsViewProps {
   onRetry: () => void;
   errorMessage: string;
   translatedImageUrl: string;
+  foodList: string[];
 }
 
 /**
@@ -20,6 +22,7 @@ const ResultsView = ({
   onRetry,
   errorMessage,
   translatedImageUrl,
+  foodList,
 }: ResultsViewProps) => {
   // 控制操作按钮的显示/隐藏
   const [showActions, setShowActions] = useState(false);
@@ -82,6 +85,10 @@ const ResultsView = ({
   const isMobileDevice = isClient && /iPhone|iPad|Android/i.test(navigator.userAgent);
   const shouldUseSystemSave = isMobileDevice && canShareApi;
   const canShare = canShareApi;
+  const handleFoodSelect = (name: string) => {
+    // 占位交互：后续可接入科普请求
+    alert(`即将提供科普：${name}`);
+  };
 
   // 错误状态 - 显示错误信息和重试按钮（毛玻璃效果）
   if (errorMessage) {
@@ -229,6 +236,13 @@ const ResultsView = ({
             </button>
           )}
         </div>
+
+        {/* 右侧食物列表抽屉 - 点击图片后显示/隐藏 */}
+        <FoodListDrawer
+          foodList={foodList}
+          open={showActions}
+          onSelect={handleFoodSelect}
+        />
 
         {/* 顶部提示文字 - 点击图片后显示/隐藏 */}
         <div 
