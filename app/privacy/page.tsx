@@ -11,7 +11,7 @@ export default function PrivacyPolicy() {
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-amber-100 p-6">
       <div className="max-w-3xl mx-auto bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 md:p-12">
         {/* 返回按钮 - 固定在顶部 */}
-        <div className="sticky top-0 z-10 -mt-2 -mx-4 md:-mx-12 mb-6 pb-4 bg-white/80 backdrop-blur-sm">
+        <div className="sticky top-0 z-10 mb-6 pb-4 bg-white/80 backdrop-blur-sm">
           <Link 
             href="/" 
             className="inline-flex items-center gap-2 text-sm text-zinc-600 hover:text-zinc-900 transition-colors"

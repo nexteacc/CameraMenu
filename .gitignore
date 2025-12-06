@@ -4,7 +4,7 @@
 .env
 .claude/*
 .pnpm-store/*
-
+/assets/*
 # dependencies
 /node_modules
 /.pnp
