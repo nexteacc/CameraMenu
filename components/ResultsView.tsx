@@ -154,7 +154,7 @@ const ResultsView = ({
 
         {/* 顶部提示文字 - 放在图片容器之外，避免遮挡；点击后淡出 */}
         <div 
-          className={`absolute top-10 left-0 right-0 text-center transition-all duration-300 pointer-events-none ${
+          className={`absolute top-10 left-0 right-0 text-center transition-all duration-300 pointer-events-none z-20 ${
             showActions 
               ? 'opacity-0' 
               : 'opacity-70'

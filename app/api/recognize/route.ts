@@ -175,6 +175,7 @@ Identify all food items in this image and add ${toLang} labels.
     // 查找图片数据
     let imageDataUrl: string | null = null;
     let textResponse: string | null = null;
+    let textPreview: string | null = null;
 
     for (const part of content.parts) {
       if (part.inlineData) {
@@ -185,8 +186,13 @@ Identify all food items in this image and add ${toLang} labels.
         console.log('找到生成的标注图片');
       } else if (part.text) {
         textResponse = part.text;
-        console.log('文字响应:', textResponse?.substring(0, 120));
+        textPreview = part.text.substring(0, 500);
+        console.log('文字响应预览:', textPreview);
       }
+    }
+
+    if (!textResponse) {
+      console.log('未收到文本部分，content.parts 长度:', content.parts.length);
     }
 
     // 如果没有图片但有文字响应，说明模型可能无法生成图片
