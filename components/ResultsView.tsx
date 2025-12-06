@@ -230,9 +230,9 @@ const ResultsView = ({
           )}
         </div>
 
-        {/* 底部提示文字 - 点击图片后显示/隐藏 */}
+        {/* 顶部提示文字 - 点击图片后显示/隐藏 */}
         <div 
-          className={`absolute bottom-8 left-0 right-0 text-center transition-all duration-300 ${
+          className={`absolute top-16 left-0 right-0 text-center transition-all duration-300 ${
             showActions 
               ? 'opacity-0' 
               : 'opacity-60'
