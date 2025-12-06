@@ -348,3 +348,20 @@ video[controls] {
   position: relative;
   z-index: 1;
 }
+
+/* 加载提示滚动动画 - 从下往上垂直滚动 */
+@keyframes loadingTipsScroll {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    /* 滚动到一半（因为内容重复了一次） */
+    transform: translateY(-50%);
+  }
+}
+
+.loading-tips-scroll {
+  animation: loadingTipsScroll 30s linear infinite;
+  display: flex;
+  flex-direction: column;
+}

@@ -7,6 +7,7 @@ import ResultsView from '../components/ResultsView';
 import LanguageSelector from '../components/LanguageSelector';
 import UpdatePrompt from '../components/UpdatePrompt';
 import BananaBackground from '../components/BananaBackground';
+import LoadingTips from '../components/LoadingTips';
 import useServiceWorkerUpdate from '../hooks/useServiceWorkerUpdate';
 
 // 应用状态
@@ -445,6 +446,9 @@ export default function Home() {
                 Please wait...
               </p>
             </div>
+            
+            {/* 滚动字幕提示 */}
+            <LoadingTips />
           </div>
         </div>
       )}
