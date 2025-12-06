@@ -21,13 +21,13 @@ const FoodListDrawer: React.FC<FoodListDrawerProps> = ({ foodList, open, onSelec
       }`}
       aria-label="Food list drawer"
     >
-      <div className="w-[75vw] max-w-[320px] bg-amber-50/90 backdrop-blur-md border border-amber-200/60 rounded-2xl shadow-xl shadow-amber-200/30 overflow-hidden">
+      <div className="max-w-[85vw] bg-amber-50/90 backdrop-blur-md border border-amber-200/60 rounded-2xl shadow-xl shadow-amber-200/30 overflow-hidden inline-block min-w-fit">
         <div className="max-h-[60vh] overflow-y-auto divide-y divide-amber-100">
           {foodList.map((item) => (
             <button
               key={item}
               onClick={() => onSelect?.(item)}
-              className="w-full text-left px-4 py-3 text-zinc-800 hover:bg-amber-100 active:bg-amber-200 transition-colors"
+              className="w-full text-left px-4 py-3 text-zinc-800 hover:bg-amber-100 active:bg-amber-200 transition-colors whitespace-nowrap"
             >
               {item}
             </button>
