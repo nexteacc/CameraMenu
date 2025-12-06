@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface TipItem {
   text: string;
@@ -14,6 +15,7 @@ interface TipItem {
  */
 const LoadingTips: React.FC = () => {
   const [expandedTip, setExpandedTip] = useState<{ text: string; index: number } | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const popupRef = useRef<HTMLDivElement>(null);
 
   // 点击外部关闭弹出框
@@ -83,30 +85,42 @@ const LoadingTips: React.FC = () => {
     { text: 'Anthony Bourdain traveled the world sharing food stories that connected cultures', type: 'people' },
   ];
 
-  // 将内容数组复制一份，用于无缝循环
-  const duplicatedTips = [...tips, ...tips];
+  // 文字旋转效果 - 每3秒切换一次
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % tips.length);
+    }, 3000);
 
-  const handleTipClick = (tip: TipItem, index: number) => {
-    if (expandedTip?.index === index) {
+    return () => clearInterval(interval);
+  }, [tips.length]);
+
+  const currentTip = tips[currentIndex];
+
+  const handleTipClick = (tip: TipItem) => {
+    if (expandedTip?.text === tip.text) {
       setExpandedTip(null);
     } else {
-      setExpandedTip({ text: tip.text, index });
+      setExpandedTip({ text: tip.text, index: currentIndex });
     }
   };
 
   return (
     <div className="w-[85%] mx-auto relative">
       <div className="h-5 overflow-hidden relative">
-        <div className="loading-tips-scroll">
-          {duplicatedTips.map((tip, index) => (
-            <div
-              key={`${tip.text}-${index}`}
-              onClick={() => handleTipClick(tip, index)}
-              className="loading-tip-item text-sm font-medium text-zinc-500 h-5 flex items-center whitespace-nowrap cursor-pointer hover:text-zinc-700 transition-colors"
+        <div className="flex items-center">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentTip.text}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              onClick={() => handleTipClick(currentTip)}
+              className="text-sm font-medium text-zinc-500 h-5 flex items-center whitespace-nowrap cursor-pointer hover:text-zinc-700 transition-colors"
             >
-              {tip.text}
-            </div>
-          ))}
+              {currentTip.text}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
       

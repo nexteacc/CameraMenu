@@ -234,12 +234,12 @@ export default function Home() {
           </div>
           
           {/* Glass Card Container */}
-          <div className="w-full max-w-md bg-amber-50/80 backdrop-blur-lg rounded-3xl shadow-2xl border border-amber-200/50 p-8 flex flex-col items-center gap-8">
+          <div className="w-full max-w-md bg-amber-50/80 backdrop-blur-lg rounded-3xl shadow-2xl border border-amber-200/50 p-8 flex flex-col items-center gap-6">
             <h1 className="text-4xl font-bold text-zinc-900 drop-shadow-sm">BananaFood</h1>
 
             <div className="flex flex-col items-center gap-6 w-full">
               {/* 语言选择器 */}
-              <p className="mb-2 text-sm font-medium text-zinc-700">To</p>
+              <p className="mb-1 text-sm font-medium text-zinc-700">To</p>
               <div className="w-full flex justify-center">
                 <div className="w-48">
                   <LanguageSelector 
